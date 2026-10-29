@@ -244,6 +244,55 @@ export async function createInNowBySwapping(
   return created as unknown as Note;
 }
 
+// ---------- backup ----------
+
+/** Every note, finished ones included — a backup of part of a board is a trap. */
+export async function exportAll(): Promise<Note[]> {
+  const d = await db();
+  const rows = await d.getAllAsync<NoteRow>('SELECT * FROM notes ORDER BY created_at');
+  return rows.map(toNote);
+}
+
+/**
+ * Adds notes that aren't here yet and leaves everything else alone.
+ *
+ * Restoring must never overwrite: the copy on this phone may well be newer
+ * than the copy in the file, and silently replacing it with an older version
+ * is indistinguishable from losing work. Returns how many were added.
+ */
+export async function importNotes(incoming: readonly Note[]): Promise<number> {
+  const d = await db();
+  let added = 0;
+  await d.withTransactionAsync(async () => {
+    for (const n of incoming) {
+      const exists = await d.getFirstAsync<{ id: string }>('SELECT id FROM notes WHERE id = ?', [
+        n.id,
+      ]);
+      if (exists) continue;
+      await d.runAsync(
+        `INSERT INTO notes (id, text, section, position, tint, created_at, updated_at, completed_at, remind_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          n.id,
+          n.text,
+          n.section,
+          n.position,
+          n.tint,
+          n.createdAt,
+          n.updatedAt,
+          n.completedAt,
+          // A restored reminder has no notification scheduled behind it, and
+          // one that already passed would be noise. The note comes back; the
+          // alarm does not.
+          null,
+        ]
+      );
+      added++;
+    }
+  });
+  return added;
+}
+
 // ---------- first run ----------
 
 const SEED: Array<[string, Section]> = [

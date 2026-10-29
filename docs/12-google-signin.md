@@ -1,59 +1,80 @@
-# Google sign-in — what it needs, and whether it's worth it
+# Google sign-in — built, and what you must do to switch it on
 
-Asked for during sprint 3. Not built. This is why, and what it would take.
+Built in sprint 3. It does exactly one thing: keeps a copy of your board in
+**your own** Google Drive, in a private folder only this app can see.
 
-## The part only you can do
+## What it is wired to
 
-Google sign-in needs an **OAuth client ID** per platform, created in your own
-Google Cloud project. I can't create those — they're tied to your identity and
-your billing account — and entering credentials on your behalf isn't something
-I should be doing either. You'd need:
+`drive.appdata` — the narrowest scope that does the job. It gives access to a
+hidden folder Drive sets aside for this app alone. The app cannot see, list or
+touch a single other file in your Drive, and no other app can read what it
+writes. One file, always overwritten: a backup, not a history.
 
-1. A project at <https://console.cloud.google.com>
-2. The OAuth consent screen filled in (app name, support email, scopes)
-3. Three client IDs: **Web**, **iOS** (needs the bundle ID), **Android**
-   (needs the package name *and* the SHA-1 of your signing key)
-4. For the Android one, a release keystore — which also has to exist before
-   you can ship to the Play Store anyway
+The access token is held in memory for the session and never written to disk.
+Staying signed in permanently needs a refresh token, which needs a server to
+hold the client secret, which is a backend this app does not have and should
+not want. Backing up is something you choose to do, so signing in at that
+moment is not a hardship.
 
-That's an afternoon of form-filling, and it's yours to do. Once you paste the
-three IDs into a config file, the code side is roughly half a day.
+## Two things you have to do
 
-## The part worth arguing about first
+### 1. Create the OAuth client IDs
 
-**Sign-in on its own does nothing for the user.** Right now every note lives
-in SQLite on the phone. Signing in wouldn't back anything up, wouldn't move a
-board to a new phone, and wouldn't let anyone share one. It would add a screen
-between a student and their board, in exchange for nothing they can feel.
+They are tied to your identity and your Google Cloud project, so they have to
+be made by you. They are **not** secrets — a client ID ships inside every app
+that uses one — but they are yours.
 
-What people actually mean by "Google sign-up" is usually one of:
+1. Make a project at <https://console.cloud.google.com>.
+2. Enable the **Google Drive API** for it.
+3. Fill in the **OAuth consent screen**: app name, your support email, and the
+   scope `.../auth/drive.appdata`. While it is in "testing" only accounts you
+   list can sign in — add your own and a classmate's to try it.
+4. Create three **OAuth client IDs** under *Credentials*:
+   - **Android** — needs the package name from `app.json`
+     (`android.package`) and the SHA-1 of your signing key
+   - **iOS** — needs the bundle identifier (`ios.bundleIdentifier`)
+   - **Web** — needed by the library even on a phone
+5. Paste all three into `GOOGLE` in `src/config.ts`.
 
-| What they want | What it actually needs |
-|---|---|
-| "Don't lose my notes if I lose my phone" | A backend, or a file export |
-| "Same board on my phone and my laptop" | Sign-in **plus** sync, plus conflict handling |
-| "Don't make me type a password" | Sign-in — but only once there's something to sign in *to* |
+Until they are filled in, the app hides the Google half of the backup sheet
+rather than showing a button that cannot work.
 
-Your own brief puts accounts, cloud sync and sharing **out of scope** for the
-MVP, and it was right to: sync is not a feature, it's a second product. Two
-devices editing one board offline is a genuinely hard problem — the fractional
-positions in `db/positions.ts` would need to survive two people reordering the
-same section on two phones with no network.
+### 2. Build a development build
 
-## What I'd suggest instead, in order
+**Google sign-in will not work in Expo Go.** Expo Go's redirect URI is an
+`exp://` address on your local network, which Google rejects — and the hosted
+auth proxy that used to paper over this was removed. This is not something
+code can work around.
 
-1. **Export and import a board as a file** — half a day, no accounts, no
-   server, no privacy questions. Covers "don't lose my notes" for most people
-   and works offline, which matters on a patchy campus connection.
-2. **Ship the MVP to your classmates and find out if anyone asks for sync.**
-   They may not. A calm single-device board is a coherent product.
-3. **Then** accounts and sync together, as their own sprint, with sign-in as
-   the first step of it rather than a door to an empty room.
+```bash
+npx expo run:android      # or: eas build --profile development --platform android
+```
 
-## If you want it anyway
+A development build also wants the Android client ID's SHA-1 to match the key
+it was signed with, so do step 1 first.
 
-Say so and I'll build it — it's your app and "users expect a Google button" is
-a real answer. I'd need the three client IDs from step 3 above. The shape
-would be `expo-auth-session/providers/Google`, the IDs in `src/config.ts`
-beside `APP_NAME`, and a sign-in row that is skippable, so the board still
-opens for someone who taps past it.
+## What works right now, with no account at all
+
+**Save a copy** and **Restore from a file**, at the bottom of the board. The
+whole thing — every note, finished ones included — written to a JSON file you
+send wherever you like. No account, no network, no server to trust, and it
+works on a bad connection. For most people, most of the time, this is the
+backup that actually gets used, which is why it is listed first on the sheet.
+
+## The one rule both paths share
+
+**Restoring only adds notes that aren't here.** It never overwrites a note
+and never deletes one. The copy on this phone may well be newer than the copy
+in the file, and silently replacing it with an older version is
+indistinguishable from losing work. So running a restore twice is harmless,
+and running it on the wrong phone costs you nothing. 13 tests cover the parser
+alone, including that a single damaged note rejects the whole file rather than
+half-restoring it.
+
+## What this still is not
+
+It is a **backup**, not sync. Two phones editing one board, offline, is a
+different and much harder product — the fractional ordering in
+`db/positions.ts` would have to survive two people reordering the same section
+with no network between them. That remains out of scope, and the brief was
+right to put it there.

@@ -34,3 +34,23 @@ export const SOMEDAY_FADE_DAYS = 14;
 
 /** ...and after this many it folds itself into the box at the bottom. */
 export const SOMEDAY_BOX_DAYS = 45;
+
+/**
+ * Google sign-in, used for one thing only: keeping a copy of your board in
+ * your own Google Drive, in the app's private folder that nothing else can
+ * read. Leave these empty and the app hides the Google half of the backup
+ * sheet entirely — saving to a file still works, offline, with no account.
+ *
+ * Filling them in means creating three OAuth client IDs in your own Google
+ * Cloud project. docs/12-google-signin.md walks through it. They are not
+ * secrets — client IDs ship inside every app that uses them — but they are
+ * tied to your project, so they have to be yours.
+ */
+export const GOOGLE = {
+  androidClientId: '',
+  iosClientId: '',
+  webClientId: '',
+} as const;
+
+export const googleConfigured = (): boolean =>
+  GOOGLE.androidClientId !== '' || GOOGLE.iosClientId !== '' || GOOGLE.webClientId !== '';

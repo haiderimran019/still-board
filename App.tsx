@@ -47,6 +47,8 @@ export default function App() {
     reorder,
     refuse,
     restore,
+    exportAll,
+    importNotes,
   } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
@@ -72,6 +74,8 @@ export default function App() {
         onReorder={reorder}
         onRefused={refuse}
         onRestore={restore}
+        onExport={exportAll}
+        onImport={importNotes}
       />
     </SafeAreaProvider>
   );

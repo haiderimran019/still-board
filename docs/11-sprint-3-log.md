@@ -271,3 +271,58 @@ sync is a door to an empty room.
 **Not verified:** the drag gesture, the haptics and the notifications have
 never run anywhere but a bundler. Drag especially — the measurement approach
 assumes the board doesn't scroll mid-gesture, which is true but untested.
+
+## Sprint 3, final additions
+
+Asked for Google sign-up, a Makio font, animations on completing a task, and
+"gravitas and softness".
+
+**On the font.** There is no font called Makio — not on Google Fonts, not on
+npm. **Mako** exists and is almost certainly what was meant: narrow, light and
+level, it gives a note weight without raising its voice. It is now the default
+via `NOTE_FACE` in `config.ts`, with Caveat still loaded as the alternative.
+The two need different metrics — Mako is a sans with a normal x-height, Caveat
+is handwriting and reads small — so the type scale follows the choice instead
+of being one compromise that suits neither. Changing it is one word.
+
+**Finishing a note is now given its due.** The circle fills with a slight
+overshoot, the note is held for a beat so you actually see it happen, and only
+then does it lift away, drifting up and to the right the way paper does when
+you take it off a board. Around 560ms end to end. Notes also arrive by rising
+into place, staggered by 35ms and capped at six, so opening the app looks like
+a board settling rather than a list appearing.
+
+Two separate animated values throughout, because height cannot run on the
+native driver and everything else should — mixing them on one value is the
+usual way this breaks.
+
+**Gravitas, concretely: nothing is lost by accident.** Clearing a note offers
+Undo for six seconds. Deleting — the only irreversible act in the app — asks
+twice, in words. The Done screen groups the last 30 days by day and puts
+anything back in one tap. The point of that screen is not a trophy cabinet; it
+is that finishing something is safe.
+
+**Google sign-in is built**, scoped to `drive.appdata` — a private folder this
+app alone can see, with no access to anything else in the user's Drive. Two
+things are still needed, both documented in `docs/12-google-signin.md`: the
+three OAuth client IDs, which only the owner of the Google Cloud project can
+create, and a development build, because **Google sign-in cannot work in Expo
+Go** — its `exp://` redirect URI is rejected by Google and the proxy that used
+to cover this was removed. Until the IDs are filled in, the app hides that
+half of the sheet rather than showing a dead button.
+
+**What works today with no account:** save the whole board to a file and
+restore from one. Offline, no server, listed first on the sheet because it is
+what most people will actually use.
+
+**The rule both backup paths share:** restoring only adds notes that aren't
+here. It never overwrites and never deletes, because the copy on the phone may
+be newer than the copy in the file and replacing it silently is
+indistinguishable from losing work. The parser has 13 tests of its own,
+including that one damaged note rejects the whole file rather than
+half-restoring it.
+
+**Verified:** 86 assertions, `tsc` clean, both platforms bundle at 2.7MB.
+**Not verified:** every animation, the drag, the haptics, the notifications,
+the file picker and all of the Drive code have run nowhere but a bundler. The
+Drive layer in particular has never made a single real request.

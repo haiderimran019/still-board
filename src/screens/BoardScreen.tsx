@@ -8,6 +8,7 @@ import { DragProvider, DraggableNote, useDrag } from '../components/DragBoard';
 import { NoteCard } from '../components/NoteCard';
 import { NoteSheet } from '../components/NoteSheet';
 import { SomedayBox } from '../components/SomedayBox';
+import { BackupSheet } from './BackupSheet';
 import { DoneScreen } from './DoneScreen';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
@@ -41,6 +42,8 @@ type Props = {
   onReorder: (id: string, section: Section, index: number) => Promise<void>;
   onRefused: (section: Section) => void;
   onRestore: (id: string) => Promise<void>;
+  onExport: () => Promise<Note[]>;
+  onImport: (notes: Note[]) => Promise<number>;
 };
 
 /**
@@ -67,12 +70,15 @@ export function BoardScreen({
   onReorder,
   onRefused,
   onRestore,
+  onExport,
+  onImport,
 }: Props) {
   const t = useTheme();
   const [capturing, setCapturing] = useState(false);
   const [boxOpen, setBoxOpen] = useState(false);
   const [opened, setOpened] = useState<Note | null>(null);
   const [showDone, setShowDone] = useState(false);
+  const [showBackup, setShowBackup] = useState(false);
   const bySection = (s: Section) => notes.filter((n) => n.section === s);
 
   // The tagline is for strangers; by the second launch the user isn't one, so
@@ -154,9 +160,14 @@ export function BoardScreen({
           );
         })}
 
-        <Text style={[type.caption, s.foot, { color: t.c.inkFaint }]}>
-          Step 4 · tap the bar to write. Fill Now to seven and try adding one more.
-        </Text>
+        <Pressable
+          onPress={() => setShowBackup(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Keep a copy of this board"
+          style={({ pressed }) => [s.footTap, { opacity: pressed ? 0.5 : 1 }]}
+        >
+          <Text style={[type.caption, s.foot, { color: t.c.inkFaint }]}>Keep a copy</Text>
+        </Pressable>
       </ScrollView>
 
       {notice && (
@@ -186,6 +197,13 @@ export function BoardScreen({
         onComplete={onComplete}
         onDelete={onDelete}
         onRemind={onRemind}
+      />
+
+      <BackupSheet
+        visible={showBackup}
+        onClose={() => setShowBackup(false)}
+        onExport={onExport}
+        onImport={onImport}
       />
 
       <DoneScreen
@@ -321,7 +339,8 @@ const s = StyleSheet.create({
   notesEmpty: { minHeight: 64, justifyContent: 'center' },
   drop: { height: 3, borderRadius: 2, marginVertical: 1 },
   empty: { fontStyle: 'italic' },
-  foot: { textAlign: 'center', paddingHorizontal: space.lg },
+  foot: { textAlign: 'center', paddingHorizontal: space.lg, textDecorationLine: 'underline' },
+  footTap: { minHeight: MIN_TAP, justifyContent: 'center' },
   noticeText: { flex: 1 },
   notice: {
     flexDirection: 'row',

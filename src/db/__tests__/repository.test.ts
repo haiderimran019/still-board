@@ -203,6 +203,58 @@ try {
     assert.equal((await repo.listDone()).find((n) => n.id === note.id)?.remindAt, null);
   });
 
+  await test('exporting includes finished notes, not just the board', async () => {
+    await repo.__resetAll();
+    const a = await repo.create('On the board', 'now');
+    const b = await repo.create('Already done', 'now');
+    await repo.complete(b.id);
+    const all = await repo.exportAll();
+    assert.equal(all.length, 2);
+    assert.ok(all.some((n) => n.id === a.id));
+    assert.ok(all.some((n) => n.id === b.id && n.completedAt !== null));
+  });
+
+  await test('importing adds what is missing and leaves the rest untouched', async () => {
+    const before = await repo.exportAll();
+    const mine = before[0];
+    const incoming = [
+      { ...mine, text: 'AN OLDER WORDING FROM THE FILE' },
+      { ...mine, id: 'from-backup', text: 'Only in the backup', section: 'next' as const },
+    ];
+    const added = await repo.importNotes(incoming);
+    await relaunch();
+
+    assert.equal(added, 1, 'only the one that was missing');
+    const after = await repo.exportAll();
+    assert.equal(after.find((n) => n.id === mine.id)?.text, mine.text, 'mine was not overwritten');
+    assert.ok(after.some((n) => n.id === 'from-backup'));
+  });
+
+  await test('importing the same backup twice changes nothing the second time', async () => {
+    const all = await repo.exportAll();
+    assert.equal(await repo.importNotes(all), 0);
+    assert.equal((await repo.exportAll()).length, all.length);
+  });
+
+  await test('a restored note comes back without a live reminder behind it', async () => {
+    await repo.__resetAll();
+    const added = await repo.importNotes([
+      {
+        id: 'r1',
+        text: 'Had a reminder on the old phone',
+        section: 'now',
+        position: 1024,
+        tint: 0,
+        createdAt: 1,
+        updatedAt: 1,
+        completedAt: null,
+        remindAt: Date.now() + 1000,
+      },
+    ]);
+    assert.equal(added, 1);
+    assert.equal((await repo.listBoard())[0].remindAt, null);
+  });
+
   console.log(`\n${passed} repository tests passed (real SQLite, reopened from disk)`);
 } finally {
   rmSync(dir, { recursive: true, force: true });

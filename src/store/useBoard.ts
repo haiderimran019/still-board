@@ -154,6 +154,17 @@ export function useBoard() {
     [notes, refresh, say]
   );
 
+  const exportAll = useCallback(() => repo.exportAll(), []);
+
+  const importNotes = useCallback(
+    async (incoming: Note[]) => {
+      const added = await repo.importNotes(incoming);
+      if (added > 0) await refresh();
+      return added;
+    },
+    [refresh]
+  );
+
   /** Back onto the board, at the end of the section it came from. */
   const restore = useCallback(
     async (id: string) => {
@@ -206,5 +217,7 @@ export function useBoard() {
     reorder,
     refuse,
     restore,
+    exportAll,
+    importNotes,
   };
 }
