@@ -88,3 +88,12 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 18, xl: 26, xxl: 40 } as const;
 
 /** The brief's floor for anything you tap. */
 export const MIN_TAP = 48;
+
+/**
+ * What a control shorter than the floor needs underneath it.
+ *
+ * A few things genuinely have to be short — a row of four pills has to fit
+ * across a phone — but what you aim at does not have to be what you can see.
+ * Six above and below takes the shortest of them (38) past 48 with room over.
+ */
+export const TAP_SLOP = { top: 6, bottom: 6 } as const;

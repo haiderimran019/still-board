@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { backupFilename, parseBackup, toBackup } from '../backup/format';
 import * as local from '../backup/local';
 import type { Note } from '../db/schema';
+import { useSheetAnimation } from '../feel/motion';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
@@ -35,6 +36,7 @@ export function BackupSheet({
   onImport: (notes: Note[]) => Promise<number>;
 }) {
   const t = useTheme();
+  const anim = useSheetAnimation('slide');
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<string | null>(null);
 
@@ -107,7 +109,7 @@ export function BackupSheet({
   );
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={anim} onRequestClose={onClose}>
       <SafeAreaView style={[s.screen, { backgroundColor: t.c.board }]} edges={['top', 'bottom']}>
         <View style={s.head}>
           <View style={s.headText}>

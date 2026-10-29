@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useSheetAnimation } from '../feel/motion';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useAccount } from '../auth/account';
@@ -31,6 +32,7 @@ export function MenuSheet({
   onProfile: () => void;
 }) {
   const t = useTheme();
+  const anim = useSheetAnimation('fade');
   const { mode, setMode } = useThemeMode();
   const a = useAccount();
 
@@ -61,10 +63,13 @@ export function MenuSheet({
   );
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType={anim} onRequestClose={onClose}>
       <Pressable style={s.backdrop} onPress={onClose} accessibilityLabel="Close this menu" />
       <View style={s.lift} pointerEvents="box-none">
-        <View style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}>
+        <View
+          accessibilityViewIsModal
+          style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}
+        >
           <View style={[s.grab, { backgroundColor: t.c.rule }]} />
           <Row
             label="Finished"
@@ -95,7 +100,7 @@ export function MenuSheet({
               Changing it does not close the menu — you want to see it land. */}
           <View style={[s.segment, { borderColor: t.c.rule, backgroundColor: t.c.board }]}>
             <Text style={[type.bodyStrong, s.segmentLabel, { color: t.c.ink }]}>Look</Text>
-            <View style={s.segmentTrack}>
+            <View accessibilityRole="radiogroup" style={s.segmentTrack}>
               {THEME_MODES.map((m) => {
                 const on = m.key === mode;
                 return (

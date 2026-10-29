@@ -13,10 +13,11 @@ import {
 
 import { reminderChoices, reminderLabel } from '../board/schedule';
 import { URGENCY } from '../board/urgency';
+import { useSheetAnimation } from '../feel/motion';
 import { NOTE_FACE } from '../config';
 import { PRIORITIES, SECTIONS, type Note, type Priority, type Section } from '../db/schema';
 import { SECTION_COPY } from '../screens/sectionCopy';
-import { MIN_TAP, radius, space } from '../theme/tokens';
+import { MIN_TAP, radius, space, TAP_SLOP } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
 
@@ -49,6 +50,7 @@ export function NoteSheet({
   onUrgency,
 }: Props) {
   const t = useTheme();
+  const anim = useSheetAnimation('slide');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -79,7 +81,7 @@ export function NoteSheet({
   const elsewhere = SECTIONS.filter((s) => s !== note.section);
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={closeKeepingEdits}>
+    <Modal visible transparent animationType={anim} onRequestClose={closeKeepingEdits}>
       <Pressable
         style={s.backdrop}
         onPress={closeKeepingEdits}
@@ -90,7 +92,13 @@ export function NoteSheet({
         style={s.lift}
         pointerEvents="box-none"
       >
-        <View style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}>
+        {/* A transparent modal leaves the board underneath reachable by a
+            screen reader, which is how someone ends up tapping a note they
+            cannot see. This shuts the rest of the screen out. */}
+        <View
+          accessibilityViewIsModal
+          style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}
+        >
           <View style={[s.grab, { backgroundColor: t.c.rule }]} />
 
           <ScrollView keyboardShouldPersistTaps="handled">
@@ -118,6 +126,7 @@ export function NoteSheet({
                       onPress={() => act(() => onRemind(note.id, c.at))}
                       accessibilityRole="button"
                       accessibilityLabel={`Remind me ${c.label.toLowerCase()}`}
+                      hitSlop={TAP_SLOP}
                       style={({ pressed }) => [
                         s.pill,
                         { borderColor: t.c.rule, opacity: pressed ? 0.6 : 1 },
@@ -132,6 +141,7 @@ export function NoteSheet({
                       onPress={() => act(() => onRemind(note.id, null))}
                       accessibilityRole="button"
                       accessibilityLabel="Clear the reminder"
+                      hitSlop={TAP_SLOP}
                       style={({ pressed }) => [
                         s.pill,
                         { borderColor: t.c.warn, opacity: pressed ? 0.6 : 1 },
@@ -146,7 +156,7 @@ export function NoteSheet({
 
             <View style={s.block}>
               <Text style={[type.label, s.blockTitle, { color: t.c.inkSoft }]}>How urgent</Text>
-              <View style={s.pills}>
+              <View accessibilityRole="radiogroup" style={s.pills}>
                 {PRIORITIES.map((p) => {
                   const on = note.priority === p;
                   const colour = p === 0 ? t.c.inkFaint : t.c.urgency[p - 1];
@@ -160,6 +170,7 @@ export function NoteSheet({
                       accessibilityRole="radio"
                       accessibilityState={{ selected: on }}
                       accessibilityLabel={URGENCY[p].label}
+                      hitSlop={TAP_SLOP}
                       style={({ pressed }) => [
                         s.pill,
                         s.urgent,
@@ -190,6 +201,7 @@ export function NoteSheet({
                     onPress={() => act(() => onMove(note.id, section))}
                     accessibilityRole="button"
                     accessibilityLabel={`Move to ${SECTION_COPY[section].name}`}
+                    hitSlop={TAP_SLOP}
                     style={({ pressed }) => [
                       s.pill,
                       { borderColor: t.c.rule, opacity: pressed ? 0.6 : 1 },
@@ -256,6 +268,8 @@ const s = StyleSheet.create({
   block: { marginTop: space.lg },
   blockTitle: { marginBottom: space.sm },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  // 40 high so a row of them fits; the 8 above and below takes what you
+  // actually have to hit up to the 48 floor.
   pill: {
     borderWidth: 1,
     borderRadius: radius.pill,

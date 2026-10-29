@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BoardScreen } from './src/screens/BoardScreen';
 import { BootFailed, Booting } from './src/screens/BootScreens';
+import { Welcome, useWelcome } from './src/screens/Welcome';
 import { useBoard } from './src/store/useBoard';
 import { AccountProvider } from './src/auth/account';
 import { ThemeProvider } from './src/theme/useTheme';
@@ -68,6 +69,7 @@ export default function App() {
         <AccountProvider onChanged={() => void refresh()}>
           <Shell ready={fontsReady && notes !== null} bootError={bootError}>
             {notes !== null && (
+              <>
               <BoardScreen
                 notes={notes}
                 nowNotes={nowNotes}
@@ -90,12 +92,27 @@ export default function App() {
                 onExport={exportAll}
                 onImport={importNotes}
               />
+              <FirstRun />
+              </>
             )}
           </Shell>
         </AccountProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
+}
+
+/**
+ * The welcome, on the first launch and never again.
+ *
+ * Kept in its own component so the question "has this person been here
+ * before?" — which involves a read off disk — cannot hold up the board
+ * behind it. It sits over a board that has already loaded, so dismissing it
+ * reveals something settled rather than a spinner.
+ */
+function FirstRun() {
+  const { show, dismiss } = useWelcome();
+  return <Welcome visible={show} onStart={dismiss} />;
 }
 
 /**

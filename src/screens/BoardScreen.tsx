@@ -114,7 +114,13 @@ export function BoardScreen({
       >
         <View style={s.head}>
           <View style={s.headText}>
-            <Text style={[type.wordmark, { color: t.c.ink }]}>{APP_NAME}</Text>
+            {/* Text scales with the phone's setting everywhere on this
+                board except here: at 200% the wordmark alone would fill the
+                screen, and it is the one piece of text nobody needs to read
+                twice. */}
+            <Text style={[type.wordmark, { color: t.c.ink }]} maxFontSizeMultiplier={1.4}>
+              {APP_NAME}
+            </Text>
             <Text style={[type.caption, { color: t.c.inkSoft }]}>{subtitle}</Text>
           </View>
           <Pressable
@@ -164,6 +170,9 @@ export function BoardScreen({
                 key={f.key}
                 onPress={() => setFilter(f.key)}
                 disabled={empty}
+                // The chip is 36 high because four of them have to fit across
+                // a phone; the hit area underneath it is not.
+                hitSlop={{ top: 6, bottom: 6 }}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: on, disabled: empty }}
                 accessibilityLabel={`${f.label}, ${counts[f.key]} notes`}
@@ -180,7 +189,11 @@ export function BoardScreen({
                     asked, and four numbers across the top of a board meant
                     to feel calm is three too many. The count still decides
                     whether a filter is worth offering — see `empty`. */}
-                <Text style={[type.label, { color: on ? t.c.board : t.c.inkSoft }]}>
+                <Text
+                  style={[type.label, { color: on ? t.c.board : t.c.inkSoft }]}
+                  maxFontSizeMultiplier={1.6}
+                  numberOfLines={1}
+                >
                   {f.label}
                 </Text>
               </Pressable>
@@ -211,6 +224,8 @@ export function BoardScreen({
                   onOpen={setOpened}
                   onComplete={(n) => onComplete(n.id)}
                   onDrop={(n) => void onDelete(n.id)}
+                  onMoveTo={(n, to) => void onMove(n.id, to)}
+                  onReorder={(n, i) => void onReorder(n.id, n.section, i)}
                 />
               </View>
             </Fragment>
@@ -220,8 +235,15 @@ export function BoardScreen({
 
       </ScrollView>
 
+      {/* Whatever just happened is said out loud as well as shown. Without
+          the live region a screen reader announces nothing at all when a
+          note is finished or dropped, and Undo would sit there unmentioned
+          until it timed out. */}
       {notice && (
-        <View style={[s.notice, { backgroundColor: t.c.ink }]}>
+        <View
+          accessibilityLiveRegion="polite"
+          style={[s.notice, { backgroundColor: t.c.ink }]}
+        >
           <Text style={[type.caption, s.noticeText, { color: t.c.board }]}>{notice.text}</Text>
           {notice.undo && (
             <Pressable
@@ -304,6 +326,8 @@ function SectionNotes({
   onOpen,
   onComplete,
   onDrop,
+  onMoveTo,
+  onReorder,
 }: {
   section: Section;
   items: Note[];
@@ -312,6 +336,8 @@ function SectionNotes({
   onOpen: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDrop: (note: Note) => void;
+  onMoveTo: (note: Note, to: Section) => void;
+  onReorder: (note: Note, index: number) => void;
 }) {
   const t = useTheme();
   const drag = useDrag();
@@ -355,10 +381,13 @@ function SectionNotes({
           <DraggableNote
             note={note}
             index={i}
+            count={out.length}
             fade={section === 'someday' ? somedayFade(note.createdAt, now) : undefined}
             onPress={onOpen}
             onComplete={onComplete}
             onDelete={onDrop}
+            onMove={onMoveTo}
+            onReorder={onReorder}
           />
         </Fragment>
       ))}

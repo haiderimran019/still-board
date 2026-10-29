@@ -15,8 +15,9 @@ import { NOTE_FACE, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { feel } from '../feel/haptics';
+import { useSheetAnimation } from '../feel/motion';
 import { SECTION_COPY } from '../screens/sectionCopy';
-import { MIN_TAP, radius, space } from '../theme/tokens';
+import { MIN_TAP, radius, space, TAP_SLOP } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
 
@@ -39,6 +40,7 @@ type Props = {
  */
 export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: Props) {
   const t = useTheme();
+  const anim = useSheetAnimation('slide');
   const input = useRef<ComponentRef<typeof TextInput>>(null);
 
   const [text, setText] = useState('');
@@ -94,7 +96,7 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType={anim}
       onRequestClose={onClose}
       onShow={() => input.current?.focus()}
     >
@@ -104,7 +106,10 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
         style={s.lift}
         pointerEvents="box-none"
       >
-        <View style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}>
+        <View
+          accessibilityViewIsModal
+          style={[s.sheet, { backgroundColor: t.c.surface, borderColor: t.c.rule }]}
+        >
           <View style={[s.grab, { backgroundColor: t.c.rule }]} />
 
           {stage === 'write' ? (
@@ -124,7 +129,7 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
                 blurOnSubmit={false}
               />
 
-              <View style={s.pills}>
+              <View accessibilityRole="radiogroup" style={s.pills}>
                 {SECTIONS.map((key) => {
                   const on = key === section;
                   return (
@@ -138,6 +143,7 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
                           ? `Now, which is full at ${NOW_LIMIT} notes`
                           : SECTION_COPY[key].name
                       }
+                      hitSlop={TAP_SLOP}
                       style={[
                         s.pill,
                         {
@@ -245,6 +251,7 @@ function FullNow({
                   onPress={() => onResolve(n.id, a.how)}
                   accessibilityRole="button"
                   accessibilityLabel={`${a.verb}: ${n.text}`}
+                  hitSlop={TAP_SLOP}
                   style={({ pressed }) => [
                     s.rowBtn,
                     {

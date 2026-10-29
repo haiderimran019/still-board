@@ -8,14 +8,16 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
 
 /** What a measured view is, in this version of React Native. */
 type Measurable = ComponentRef<typeof View>;
 
 import { dropTarget, isNoOp, type Drop, type NoteRect, type SectionRect } from '../board/drag';
+import { actionSaid, actionsFor, readAction } from '../board/noteActions';
 import type { Note, Section } from '../db/schema';
 import { feel } from '../feel/haptics';
+import { ms, useReducedMotion } from '../feel/motion';
 import { space } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
@@ -234,19 +236,27 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 export function DraggableNote({
   note,
   index,
+  count,
   fade,
   onPress,
   onComplete,
   onDelete,
+  onMove,
+  onReorder,
 }: {
   note: Note;
   index: number;
+  /** How many notes are in this section, so the ends know not to offer a move. */
+  count: number;
   fade?: number;
   onPress: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onMove: (note: Note, to: Section) => void;
+  onReorder: (note: Note, index: number) => void;
 }) {
   const t = useTheme();
+  const calm = useReducedMotion();
   const drag = useDrag();
   const view = useRef<Measurable | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
@@ -259,12 +269,43 @@ export function DraggableNote({
   latest.current = drag;
   const act = useRef({ onPress, onDelete });
   act.current = { onPress, onDelete };
+  // Read through a ref for the same reason as `latest` above: the pan
+  // responder is built exactly once and must not be rebuilt if the setting
+  // changes while the app is open.
+  const calmRef = useRef(calm);
+  calmRef.current = calm;
 
   const lifted = useRef(false);
   const moved = useRef(false);
   const mode = useRef<'drag' | 'swipe' | null>(null);
 
   const dragging = drag.draggingId === note.id;
+
+  /**
+   * The same four things the gestures do, reached through the platform's
+   * actions menu instead. A screen reader gives no feedback of its own for a
+   * custom action, so each one says what it did afterwards — otherwise the
+   * note moves and the person is told nothing.
+   */
+  const perform = (name: string) => {
+    const a = readAction(name);
+    if (!a) return;
+    switch (a.kind) {
+      case 'finish':
+        onComplete(note);
+        break;
+      case 'delete':
+        onDelete(note);
+        break;
+      case 'shift':
+        onReorder(note, index + a.by);
+        break;
+      case 'move':
+        onMove(note, a.to);
+        break;
+    }
+    AccessibilityInfo.announceForAccessibility(actionSaid(a, note));
+  };
 
   const responder = useMemo(
     () =>
@@ -316,7 +357,7 @@ export function DraggableNote({
             // It leaves the way it was pushed, then the board catches up.
             Animated.timing(pan, {
               toValue: { x: -600, y: 0 },
-              duration: 180,
+              duration: ms(180, calmRef.current),
               useNativeDriver: true,
             }).start(() => {
               act.current.onDelete(note);
@@ -383,6 +424,8 @@ export function DraggableNote({
           fade={dragging ? 0.92 : fade}
           onPress={onPress}
           onComplete={onComplete}
+          actions={actionsFor(note, index, count)}
+          onAction={perform}
           onLongPress={() => {
             lifted.current = true;
             drag.begin(note, index);

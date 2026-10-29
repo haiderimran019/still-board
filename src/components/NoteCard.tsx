@@ -1,11 +1,13 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { ActionSpec } from '../board/noteActions';
 import { reminderLabel } from '../board/schedule';
 import { URGENCY, urgencyColour } from '../board/urgency';
 import { ageWhisper } from '../board/whispers';
 import type { Note } from '../db/schema';
 import { feel } from '../feel/haptics';
+import { ms, useReducedMotion } from '../feel/motion';
 import { SECTION_COPY } from '../screens/sectionCopy';
 import { MIN_TAP, radius } from '../theme/tokens';
 import { type } from '../theme/typography';
@@ -40,6 +42,8 @@ function NoteCardBase({
   onLongPress,
   onPressOut,
   suppressPress,
+  actions,
+  onAction,
 }: {
   note: Note;
   index: number;
@@ -51,8 +55,12 @@ function NoteCardBase({
   onPressOut?: () => void;
   /** True once a drag has taken over, so the release isn't read as a tap. */
   suppressPress?: () => boolean;
+  /** The same things a drag or a swipe does, for people who can do neither. */
+  actions?: ActionSpec[];
+  onAction?: (name: string) => void;
 }) {
   const t = useTheme();
+  const calm = useReducedMotion();
   const tilt = index % 2 === 0 ? '-0.35deg' : '0.35deg';
 
   // Only Now gets the age line. Next and Someday are allowed to sit there —
@@ -80,13 +88,13 @@ function NoteCardBase({
   useEffect(() => {
     Animated.timing(enter, {
       toValue: 1,
-      duration: SETTLE_IN,
+      duration: ms(SETTLE_IN, calm),
       // Capped, or a long board would still be arriving when you reach for it.
-      delay: Math.min(index, 6) * 35,
+      delay: calm ? 0 : Math.min(index, 6) * 35,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [enter, index]);
+  }, [calm, enter, index]);
 
   const finish = () => {
     if (finishing || !onComplete) return;
@@ -96,7 +104,7 @@ function NoteCardBase({
     Animated.sequence([
       Animated.timing(mark, {
         toValue: 1,
-        duration: MARK,
+        duration: ms(MARK, calm),
         easing: Easing.out(Easing.back(2)),
         useNativeDriver: true,
       }),
@@ -104,13 +112,13 @@ function NoteCardBase({
       Animated.parallel([
         Animated.timing(leave, {
           toValue: 1,
-          duration: LEAVE,
+          duration: ms(LEAVE, calm),
           easing: Easing.in(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(collapse, {
           toValue: 0,
-          duration: LEAVE,
+          duration: ms(LEAVE, calm),
           easing: Easing.in(Easing.cubic),
           useNativeDriver: false,
         }),
@@ -143,13 +151,18 @@ function NoteCardBase({
       ]}
     >
       {/* The one action worth a direct tap. Its hit area is padded out to
-          the 48dp floor without the circle itself having to be that big. */}
+          the 48dp floor without the circle itself having to be that big.
+
+          Hidden from the screen reader on purpose, and not because it does
+          not matter: the whole note is one accessibility element, so a
+          control nested inside it can never be focused anyway. Leaving a
+          label on it would only promise something that is not there.
+          Finishing is offered as an action on the note instead. */}
       <Pressable
         onPress={finish}
         disabled={!onComplete || finishing}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: finishing }}
-        accessibilityLabel={`Finish: ${note.text}`}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
         hitSlop={14}
         style={({ pressed }) => [s.checkTap, { opacity: pressed ? 0.4 : 1 }]}
       >
@@ -211,6 +224,11 @@ function NoteCardBase({
         onPressOut={onPressOut}
         delayLongPress={450}
         accessibilityRole={onPress ? 'button' : 'text'}
+        accessibilityActions={actions}
+        onAccessibilityAction={(e) => onAction?.(e.nativeEvent.actionName)}
+        accessibilityHint={
+          actions && actions.length > 0 ? 'Opens the note. More actions available.' : undefined
+        }
         // Read aloud, a note should place itself without the listener having
         // to track which section heading came last.
         accessibilityLabel={

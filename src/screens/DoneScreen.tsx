@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { groupByDay, windowNote } from '../board/done';
 import { clockTime } from '../board/schedule';
 import type { Note } from '../db/schema';
-import { MIN_TAP, radius, space } from '../theme/tokens';
+import { useSheetAnimation } from '../feel/motion';
+import { MIN_TAP, radius, space, TAP_SLOP } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
 
@@ -28,10 +29,11 @@ export function DoneScreen({
   onRestore: (id: string) => Promise<void>;
 }) {
   const t = useTheme();
+  const anim = useSheetAnimation('slide');
   const groups = groupByDay(notes, new Date());
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={anim} onRequestClose={onClose}>
       <SafeAreaView style={[s.screen, { backgroundColor: t.c.board }]} edges={['top', 'bottom']}>
         <View style={s.head}>
           <View style={s.headText}>
@@ -78,6 +80,7 @@ export function DoneScreen({
                     onPress={() => void onRestore(n.id)}
                     accessibilityRole="button"
                     accessibilityLabel={`Put back on the board: ${n.text}`}
+                    hitSlop={TAP_SLOP}
                     style={({ pressed }) => [
                       s.restore,
                       { borderColor: t.c.rule, opacity: pressed ? 0.6 : 1 },

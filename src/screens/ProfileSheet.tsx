@@ -3,6 +3,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '../auth/account';
+import { useSheetAnimation } from '../feel/motion';
 import { syncSaid } from '../sync/sync';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
@@ -30,6 +31,7 @@ export function ProfileSheet({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const anim = useSheetAnimation('slide');
   const a = useAccount();
   const [said, setSaid] = useState<string | null>(null);
 
@@ -78,7 +80,7 @@ export function ProfileSheet({
   );
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={anim} onRequestClose={onClose}>
       <SafeAreaView style={[s.screen, { backgroundColor: t.c.board }]} edges={['top', 'bottom']}>
         <View style={s.head}>
           <Text accessibilityRole="header" style={[type.wordmark, s.title, { color: t.c.ink }]}>
