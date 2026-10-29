@@ -1,0 +1,138 @@
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import * as repo from '../repository.ts';
+import { fileDriver } from './nodeDriver.ts';
+
+const dir = mkdtempSync(join(tmpdir(), 'still-'));
+const file = join(dir, 'still.db');
+const driver = fileDriver(file);
+
+let passed = 0;
+async function test(name: string, fn: () => Promise<void>) {
+  await fn();
+  console.log(`  ok  ${name}`);
+  passed++;
+}
+
+/** Drops the connection and opens the file again — a force-quit and relaunch. */
+async function relaunch() {
+  repo.__useDriver(driver);
+  await repo.init();
+}
+
+try {
+  await relaunch();
+
+  await test('a first launch seeds the board', async () => {
+    assert.equal(await repo.seedIfEmpty(), true);
+    assert.equal((await repo.listBoard()).length, 7);
+    assert.equal(await repo.countIn('now'), 3);
+  });
+
+  await test('a second launch does not seed again', async () => {
+    assert.equal(await repo.seedIfEmpty(), false);
+    assert.equal((await repo.listBoard()).length, 7);
+  });
+
+  await test('notes survive a force-quit and relaunch', async () => {
+    await repo.create('Written before the crash', 'next');
+    await relaunch();
+    const texts = (await repo.listBoard()).map((n) => n.text);
+    assert.ok(texts.includes('Written before the crash'));
+    assert.equal(texts.length, 8);
+  });
+
+  await test('migrations do not run twice', async () => {
+    // A second migrate() on an existing file must leave the rows alone.
+    await relaunch();
+    assert.equal((await repo.listBoard()).length, 8);
+  });
+
+  await test('the board comes back in Now, Next, Someday order', async () => {
+    const sections = (await repo.listBoard()).map((n) => n.section);
+    assert.deepEqual([...sections].sort(), sections.slice().sort());
+    assert.equal(sections.indexOf('now'), 0);
+    assert.ok(sections.lastIndexOf('now') < sections.indexOf('next'));
+    assert.ok(sections.lastIndexOf('next') < sections.indexOf('someday'));
+  });
+
+  await test('editing a note persists', async () => {
+    const board = await repo.listBoard();
+    await repo.edit(board[0].id, '  Trimmed on the way in  ');
+    await relaunch();
+    assert.equal((await repo.listBoard())[0].text, 'Trimmed on the way in');
+  });
+
+  await test('place() reorders within a section', async () => {
+    const now = (await repo.listBoard()).filter((n) => n.section === 'now');
+    const last = now[now.length - 1];
+    await repo.place(last.id, 'now', 0);
+    await relaunch();
+    const after = (await repo.listBoard()).filter((n) => n.section === 'now');
+    assert.equal(after[0].id, last.id);
+    assert.equal(after.length, now.length);
+  });
+
+  await test('moving across sections keeps the counts right', async () => {
+    const before = await repo.countIn('now');
+    const note = (await repo.listBoard()).find((n) => n.section === 'now')!;
+    await repo.moveToEnd(note.id, 'someday');
+    assert.equal(await repo.countIn('now'), before - 1);
+    const someday = (await repo.listBoard()).filter((n) => n.section === 'someday');
+    assert.equal(someday[someday.length - 1].id, note.id);
+  });
+
+  await test('completing moves a note off the board and into Done', async () => {
+    const note = (await repo.listBoard())[0];
+    const boardBefore = (await repo.listBoard()).length;
+    await repo.complete(note.id);
+    await relaunch();
+    assert.equal((await repo.listBoard()).length, boardBefore - 1);
+    assert.ok((await repo.listDone()).some((n) => n.id === note.id));
+  });
+
+  await test('undo puts a completed note back at the end of its section', async () => {
+    const done = (await repo.listDone())[0];
+    await repo.uncomplete(done.id);
+    const section = (await repo.listBoard()).filter((n) => n.section === done.section);
+    assert.equal(section[section.length - 1].id, done.id);
+    assert.equal((await repo.listDone()).length, 0);
+  });
+
+  await test('Done is bounded by its window', async () => {
+    const note = (await repo.listBoard())[0];
+    await repo.complete(note.id);
+    assert.equal((await repo.listDone(30)).length, 1);
+    assert.equal((await repo.listDone(0)).length, 1, 'completed just now, so still inside 0 days');
+  });
+
+  await test('delete is permanent', async () => {
+    const note = (await repo.listBoard())[0];
+    await repo.remove(note.id);
+    await relaunch();
+    assert.ok(!(await repo.listBoard()).some((n) => n.id === note.id));
+  });
+
+  await test('50 reorders into the same gap stay correctly ordered', async () => {
+    // Fractional positions run out of room eventually; the repository is
+    // supposed to renumber rather than lose the order.
+    const target = (await repo.listBoard()).filter((n) => n.section === 'next');
+    assert.ok(target.length >= 2, 'need something to insert between');
+    for (let i = 0; i < 50; i++) {
+      const next = (await repo.listBoard()).filter((n) => n.section === 'next');
+      await repo.place(next[next.length - 1].id, 'next', 1);
+    }
+    await relaunch();
+    const after = (await repo.listBoard()).filter((n) => n.section === 'next');
+    const positions = after.map((n) => n.position);
+    assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
+    assert.equal(new Set(positions).size, positions.length, 'positions must stay distinct');
+  });
+
+  console.log(`\n${passed} repository tests passed (real SQLite, reopened from disk)`);
+} finally {
+  rmSync(dir, { recursive: true, force: true });
+}
