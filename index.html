@@ -4,33 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>still. — Your life, on one calm board</title>
-<meta name="description" content="A calm place for everything you're carrying. Now, Next, Someday — and a hard limit of seven things today. Offline, private, no account.">
+<meta name="description" content="A calm place for everything you're carrying. Now, Next, Next week, Someday — and a hard limit of seven things today. Works offline. Sign in and your board follows you.">
 <meta property="og:title" content="still. — Your life, on one calm board">
-<meta property="og:description" content="Now, Next, Someday. Seven things today, no more. Offline and private.">
+<meta property="og:description" content="Now holds seven. That's the whole idea. Offline by default, yours alone, on Android and iPhone.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#fdf7ec">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Mako&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* The palette is the app's, token for token — see src/theme/tokens.ts.
+   Every text colour clears 4.5:1 on the surface under it, in both themes. */
 :root{
   --board:#fdf7ec; --line:#f3e8d6; --surface:#fffdf8;
   --ink:#3a3026; --ink-soft:#6b5f4c; --ink-faint:#7c6e58;
   --rule:#ece0cd; --accent:#6e5220; --warn:#9c5d12;
   --n1:#ffeba3; --n2:#cdeed6; --n3:#ded8f2; --n4:#ffd4c2;
+  --u1:#d7eedd; --u2:#ffe6b4; --u3:#ffd5cd;
+  --e1:#1e7a48; --e2:#9a6a00; --e3:#b3261e;
   --edge:rgba(58,48,38,.12);
-  --shadow:0 3px 8px rgba(58,48,38,.16);
+  --shadow:0 2px 0 rgba(58,48,38,.06), 0 6px 14px -9px rgba(58,48,38,.42);
   --ui:'Gabarito',system-ui,-apple-system,sans-serif;
-  --hand:'Mako',system-ui,sans-serif;
+  --hand:'Shantell Sans','Gabarito',system-ui,sans-serif;
 }
-:root:not([data-theme="light"]) { }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --board:#1a1713; --line:#241f19; --surface:#241f19;
     --ink:#f2eae0; --ink-soft:#b5a897; --ink-faint:#8d8273;
     --rule:#302922; --accent:#e8c892; --warn:#e8a74e;
     --n1:#4a3f1e; --n2:#2d4031; --n3:#37314f; --n4:#4a3328;
+    --u1:#1f3b2c; --u2:#453516; --u3:#4a2420;
+    --e1:#6fd39b; --e2:#e8c04e; --e3:#ff8a7a;
     --edge:rgba(0,0,0,.4);
-    --shadow:0 3px 10px rgba(0,0,0,.55);
+    --shadow:0 2px 0 rgba(0,0,0,.3), 0 6px 14px -9px rgba(0,0,0,.7);
+    color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
@@ -38,124 +45,212 @@
   --ink:#f2eae0; --ink-soft:#b5a897; --ink-faint:#8d8273;
   --rule:#302922; --accent:#e8c892; --warn:#e8a74e;
   --n1:#4a3f1e; --n2:#2d4031; --n3:#37314f; --n4:#4a3328;
+  --u1:#1f3b2c; --u2:#453516; --u3:#4a2420;
+  --e1:#6fd39b; --e2:#e8c04e; --e3:#ff8a7a;
   --edge:rgba(0,0,0,.4);
-  --shadow:0 3px 10px rgba(0,0,0,.55);
+  --shadow:0 2px 0 rgba(0,0,0,.3), 0 6px 14px -9px rgba(0,0,0,.7);
+  color-scheme:dark;
 }
+
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;background:var(--board);color:var(--ink);
-  font-family:var(--ui);font-size:17px;line-height:1.6;
+  margin:0;color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.6;
   -webkit-font-smoothing:antialiased;
+  background:var(--board);
+  /* The same faint grid the board itself is drawn on. */
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:28px 28px;
 }
-.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
-header{padding:28px 0 0}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.mark{font-weight:700;font-size:28px;letter-spacing:-1px}
-.theme{
-  font:inherit;font-size:13px;color:var(--ink-soft);background:none;
-  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;cursor:pointer;
-  min-height:40px;
-}
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px 90px}
+
+h1,h2,h3,h4{letter-spacing:-.03em;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6.4vw,58px);font-weight:700;line-height:1.04}
+h3{font-size:clamp(25px,3.4vw,33px);font-weight:700;margin-bottom:10px}
+h4{font-size:17px;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--board) 88%,transparent);
+  backdrop-filter:blur(9px);border-bottom:1px solid transparent;transition:border-color .2s}
+header.stuck{border-bottom-color:var(--rule)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0}
+.mark{font-size:27px;font-weight:700;letter-spacing:-.045em}
+.theme{font:600 13px/1 var(--ui);color:var(--ink-soft);background:var(--surface);
+  border:1px solid var(--rule);border-radius:999px;padding:9px 15px;cursor:pointer;min-height:38px}
 .theme:hover{color:var(--ink)}
 
-.hero{padding:72px 0 56px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
-h1{font-size:clamp(38px,6vw,62px);line-height:1.04;letter-spacing:-2px;margin:0 0 20px;font-weight:700}
-.lede{font-size:19px;color:var(--ink-soft);margin:0 0 32px;max-width:46ch}
-.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;min-height:50px;
-  padding:0 24px;border-radius:14px;text-decoration:none;font-weight:600;font-size:16px;
-  border:1px solid transparent;
-}
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center;
+  padding:52px 0 26px}
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:34px;padding-top:30px}}
+.lede{font-size:clamp(18px,2.1vw,21px);color:var(--ink-soft);margin:18px 0 0;max-width:30ch}
+.lede strong{color:var(--ink);font-weight:600}
+.cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;
+  padding:0 23px;border-radius:13px;font:600 15.5px/1 var(--ui);text-decoration:none;
+  border:1px solid transparent;transition:transform .14s ease,opacity .14s ease}
+.btn:active{transform:translateY(1px)}
 .btn-main{background:var(--accent);color:var(--board)}
-.btn-main:hover{filter:brightness(1.1)}
-.btn-ghost{border-color:var(--rule);color:var(--ink)}
-.btn-ghost:hover{background:var(--surface)}
-.note-small{font-size:13.5px;color:var(--ink-faint);margin-top:14px}
+.btn-main:hover{opacity:.88}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn-ghost:hover{border-color:var(--ink-faint)}
+.small{font-size:13.5px;color:var(--ink-faint);margin-top:16px}
 
-/* the phone */
-.phone{
-  justify-self:center;width:300px;border-radius:38px;padding:12px;
-  background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow);
-}
-.screen{background:var(--board);border-radius:28px;padding:20px 16px;border:1px solid var(--rule)}
-.screen h2{font-size:26px;margin:0;letter-spacing:-1px}
-.sub{font-size:12.5px;color:var(--ink-soft);margin:2px 0 16px}
-.sec{font-size:17px;font-weight:700;letter-spacing:-.3px;margin:18px 0 2px;display:flex;justify-content:space-between;align-items:baseline}
-.sec span{font-size:12px;font-weight:500;color:var(--ink-soft)}
-.why{font-size:11.5px;color:var(--ink-faint);margin-bottom:9px}
-.gauge{display:flex;gap:3px;margin:8px 0 10px}
-.pip{height:3px;flex:1;border-radius:2px;background:var(--rule)}
+/* ---------- the phone ---------- */
+.phone{justify-self:center;width:300px;border:9px solid #2a2520;border-radius:40px;
+  overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.2),0 26px 50px -22px rgba(0,0,0,.5);
+  background:var(--board)}
+.screen{background:var(--board);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:26px 26px;padding:18px 15px 22px;height:594px;overflow:hidden;position:relative}
+.screen h2{font-size:25px;font-weight:700;letter-spacing:-.045em}
+.sub{font-size:12px;color:var(--ink-soft);margin-bottom:13px}
+.lens{display:flex;gap:6px;margin-bottom:14px}
+.lens b{font:500 11px/1 var(--ui);color:var(--ink-soft);border:1px solid var(--rule);
+  border-radius:999px;padding:6px 10px}
+.lens b.on{background:var(--accent);color:var(--board);border-color:var(--accent)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:17px;font-weight:700;letter-spacing:-.02em;margin:15px 0 1px}
+.sec span{font-size:11.5px;font-weight:600;color:var(--ink-soft)}
+.sec span.full{color:var(--warn)}
+.why{font-size:10.5px;color:var(--ink-faint);margin-bottom:7px}
+.gauge{display:flex;gap:3px;margin:0 0 9px}
+.pip{height:3px;flex:1;border-radius:2px;background:var(--rule);transition:background .3s}
 .pip.on{background:var(--accent)}
-.sticky{
-  display:flex;gap:10px;align-items:flex-start;padding:11px 12px;margin-bottom:8px;
-  border:1px solid var(--edge);border-radius:12px;box-shadow:var(--shadow);
-  font-family:var(--hand);font-size:14px;line-height:1.45;letter-spacing:.15px;
-}
+.gauge.full .pip.on{background:var(--warn)}
+
+.sticky{display:flex;gap:9px;align-items:flex-start;padding:10px 11px;margin-bottom:7px;
+  background:var(--n1);border:1px solid var(--edge);border-radius:11px;box-shadow:var(--shadow);
+  font-family:var(--hand);font-weight:500;font-size:13px;line-height:1.42;
+  transform:rotate(-.35deg)}
 .sticky:nth-child(even){transform:rotate(.35deg)}
-.sticky:nth-child(odd){transform:rotate(-.35deg)}
-.dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-faint);flex:none;margin-top:2px}
-.pri{width:4px;align-self:stretch;border-radius:2px;flex:none}
+.sticky .dot{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink-faint);
+  flex:none;margin-top:1px}
 .y{background:var(--n1)} .g{background:var(--n2)} .l{background:var(--n3)} .p{background:var(--n4)}
+/* Urgency is the whole note, exactly as it is in the app. */
+.u1{background:var(--u1);border-color:var(--e1);border-width:1.5px}
+.u2{background:var(--u2);border-color:var(--e2);border-width:1.5px}
+.u3{background:var(--u3);border-color:var(--e3);border-width:1.5px}
 
-section{padding:64px 0;border-top:1px solid var(--line)}
-h3{font-size:clamp(26px,3.6vw,36px);letter-spacing:-1px;margin:0 0 12px}
-.section-lede{color:var(--ink-soft);max-width:60ch;margin:0 0 36px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.card{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:24px}
-.card h4{margin:0 0 8px;font-size:18px;letter-spacing:-.3px}
-.card p{margin:0;color:var(--ink-soft);font-size:15.5px}
-.kicker{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink-faint);margin:0 0 10px}
+/* Notes rise into place, lightly staggered — the app's entrance animation. */
+@keyframes settle{from{opacity:0;transform:translateY(10px) rotate(-.35deg)}
+  to{opacity:1;transform:translateY(0) rotate(-.35deg)}}
+.screen .sticky{animation:settle .34s cubic-bezier(.22,.9,.3,1) both}
+.screen .sticky:nth-of-type(2){animation-delay:.05s}
+.screen .sticky:nth-of-type(3){animation-delay:.1s}
+.screen .sticky:nth-of-type(4){animation-delay:.15s}
+.screen .sticky:nth-of-type(5){animation-delay:.2s}
 
-.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.band{border-radius:16px;padding:24px;border:1px solid var(--edge)}
-.band h4{margin:0 0 6px;font-size:19px}
-.band p{margin:0;font-size:15px;color:var(--ink)}
-.band.now{background:var(--n1)} .band.next{background:var(--n2)} .band.some{background:var(--n3)}
+/* ---------- sections ---------- */
+section{padding:62px 0;border-top:1px solid var(--rule);scroll-margin-top:72px}
+.kicker{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600;margin-bottom:11px}
+.section-lede{color:var(--ink-soft);max-width:58ch;font-size:17.5px}
 
-.seven{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
-.big{font-size:clamp(76px,13vw,140px);line-height:.9;font-weight:700;letter-spacing:-5px;color:var(--accent)}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-top:30px}
+@media(max-width:840px){.ladder{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.ladder{grid-template-columns:1fr}}
+.band{background:var(--surface);border:1px solid var(--rule);border-radius:15px;
+  padding:19px;border-top:4px solid var(--accent)}
+.band.b2{border-top-color:var(--e1)}
+.band.b3{border-top-color:var(--e2)}
+.band.b4{border-top-color:var(--rule)}
+.band p{font-size:14.5px;color:var(--ink-soft);margin-top:7px}
 
-footer{padding:52px 0 72px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:14.5px}
-footer a{color:var(--ink-soft)}
-.built{margin-top:10px}
+/* ---------- the limit, which you can actually push against ---------- */
+.try{display:grid;grid-template-columns:1fr 300px;gap:38px;align-items:center}
+@media(max-width:860px){.try{grid-template-columns:1fr}}
+.demo{background:var(--surface);border:1px solid var(--rule);border-radius:18px;padding:17px}
+.demo .row{display:flex;align-items:center;gap:9px;padding:9px 11px;margin-bottom:6px;
+  border:1px solid var(--edge);border-radius:10px;
+  font-family:var(--hand);font-weight:500;font-size:13.5px}
+.demo .row.out{animation:lift .3s ease forwards}
+@keyframes lift{to{opacity:0;transform:translateX(22px) scale(.95)}}
+.demo .add{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;margin-top:11px;padding:12px 14px;min-height:48px;cursor:pointer;
+  background:var(--board);border:1px solid var(--rule);border-radius:12px;
+  font:600 14.5px/1 var(--ui);color:var(--ink-faint);text-align:left}
+.demo .add:hover{border-color:var(--ink-faint);color:var(--ink-soft)}
+.plus{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--board);
+  display:grid;place-items:center;font-size:17px;flex:none}
+.refusal{margin-top:12px;padding:14px;border-radius:12px;background:var(--board);
+  border:1px solid var(--warn);display:none}
+.refusal.show{display:block;animation:settle .26s ease both}
+.refusal h4{color:var(--warn)}
+.refusal p{font-size:13.5px;color:var(--ink-soft);margin:5px 0 11px}
+.pick{display:flex;gap:7px;flex-wrap:wrap}
+.pick button{font:600 13px/1 var(--ui);padding:10px 13px;min-height:40px;cursor:pointer;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:9px}
+.pick button:hover{border-color:var(--accent)}
+.said{font-size:13.5px;color:var(--ink-soft);margin-top:10px;min-height:20px}
+.seven-mark{font-size:clamp(84px,14vw,132px);font-weight:700;line-height:.84;
+  color:var(--accent);letter-spacing:-.06em;opacity:.17;user-select:none}
 
-@media (max-width:860px){
-  .hero{grid-template-columns:1fr;gap:40px;padding:48px 0 40px}
-  .grid,.three{grid-template-columns:1fr}
-  .phone{width:min(300px,100%)}
+/* ---------- grid of features ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:28px}
+@media(max-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:15px;padding:19px;
+  transition:transform .16s ease,border-color .16s ease}
+.card:hover{transform:translateY(-2px);border-color:var(--ink-faint)}
+.card p{font-size:14.5px;color:var(--ink-soft);margin-top:7px}
+.card .tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+  color:var(--accent);display:block;margin-bottom:7px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
+@media(max-width:800px){.split{grid-template-columns:1fr}}
+.plain{border-left:2px solid var(--rule);padding-left:17px;margin-top:17px}
+.plain p{font-size:15px;color:var(--ink-soft);margin-bottom:9px}
+.plain b{color:var(--ink);font-weight:600}
+
+footer{border-top:1px solid var(--rule);padding:30px 0 0;color:var(--ink-soft);font-size:14.5px}
+.built{color:var(--ink-faint);font-size:13px;margin-top:8px}
+
+/* Everything above is decoration; none of it should move for someone who
+   has asked their machine to stop moving things. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
 }
+.reveal{opacity:0;transform:translateY(14px)}
+.reveal.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.22,.9,.3,1)}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<header>
-  <div class="bar">
+<header id="top">
+  <div class="wrap"><div class="bar">
     <div class="mark">still.</div>
     <button class="theme" id="theme" type="button">Dark</button>
-  </div>
+  </div></div>
 </header>
+
+<div class="wrap">
 
 <div class="hero">
   <div>
     <h1>Your life, on one calm board.</h1>
     <p class="lede">
-      Everything you're carrying, in three places instead of twenty.
-      <strong>Now</strong> holds seven things. That's the whole idea.
+      Everything you're carrying, in four places instead of twenty.
+      <strong>Now holds seven.</strong> That's the whole idea.
     </p>
     <div class="cta">
       <a class="btn btn-main" href="#get">Get it</a>
-      <a class="btn btn-ghost" href="#why">Why seven?</a>
+      <a class="btn btn-ghost" href="#limit">Push against the limit</a>
     </div>
-    <p class="note-small">Android and iPhone · works offline · no account needed</p>
+    <p class="small">Android and iPhone · works with no signal · sign in only if you want to</p>
   </div>
 
-  <div class="phone" aria-label="A preview of the app">
+  <div class="phone" aria-label="The app: a board with four sections">
     <div class="screen">
       <h2>still.</h2>
       <div class="sub">Morning · 3 in Now</div>
+
+      <div class="lens"><b class="on">All</b><b>Today</b><b>This week</b><b>Next week</b></div>
 
       <div class="sec">Now <span>3 / 7</span></div>
       <div class="why">what you're carrying today</div>
@@ -163,116 +258,266 @@ footer a{color:var(--ink-soft)}
         <i class="pip on"></i><i class="pip on"></i><i class="pip on"></i>
         <i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i>
       </div>
-      <div class="sticky y"><span class="pri" style="background:#c0392b"></span><span class="dot"></span><span>Finish data structures assignment</span></div>
-      <div class="sticky g"><span class="pri" style="background:#b7950b"></span><span class="dot"></span><span>Reply to Ayesha about the group project</span></div>
-      <div class="sticky p"><span class="pri" style="background:#1e8449"></span><span class="dot"></span><span>Pay hostel fee</span></div>
+      <div class="sticky u3"><span class="dot"></span><span>Finish data structures assignment</span></div>
+      <div class="sticky u2"><span class="dot"></span><span>Reply to Ayesha about the group project</span></div>
+      <div class="sticky g"><span class="dot"></span><span>Pay hostel fee</span></div>
 
       <div class="sec">Next <span>2</span></div>
       <div class="why">soon, but not today</div>
       <div class="sticky l"><span class="dot"></span><span>Update portfolio</span></div>
 
-      <div class="sec">Someday</div>
-      <div class="why">no pressure to act</div>
-      <div class="sticky y" style="opacity:.55"><span class="dot"></span><span>Learn photography</span></div>
+      <div class="sec">Next week</div>
+      <div class="why">the week ahead</div>
+      <div class="sticky y"><span class="dot"></span><span>Start the presentation slides</span></div>
     </div>
   </div>
 </div>
 
-<section id="why">
+<section id="why" class="reveal">
   <p class="kicker">The idea</p>
-  <h3>Three places. Not twenty.</h3>
+  <h3>Four places. Not twenty.</h3>
   <p class="section-lede">
-    Most task apps let you make infinite lists, which is how a to-do list turns into
-    a second source of guilt. This one has three sections and refuses to grow.
+    Most task apps let you make infinite lists, which is how a to-do list turns into a
+    second source of guilt. This one has four sections, they are a ladder away from
+    today, and the first one refuses to grow.
   </p>
-  <div class="three">
-    <div class="band now"><h4>Now</h4><p>What you're carrying today. Seven at most — the app will stop you.</p></div>
-    <div class="band next"><h4>Next</h4><p>Soon, but not today. No count, no pressure, no red badges.</p></div>
-    <div class="band some"><h4>Someday</h4><p>Things that can wait. They fade over weeks and fold into a box.</p></div>
+  <div class="ladder">
+    <div class="band"><h4>Now</h4><p>What you're carrying today. Seven at most — the board will stop you.</p></div>
+    <div class="band b2"><h4>Next</h4><p>Soon, but not today. No count, no pressure, no red badges.</p></div>
+    <div class="band b3"><h4>Next week</h4><p>The week ahead. Out of today's way without being forgotten.</p></div>
+    <div class="band b4"><h4>Someday</h4><p>No pressure to act. These fade over weeks and fold into a box.</p></div>
   </div>
 </section>
 
-<section>
-  <div class="seven">
-    <div class="big">7</div>
-    <div style="flex:1;min-width:280px">
-      <h3 style="margin-bottom:10px">The limit is the feature</h3>
-      <p class="section-lede" style="margin-bottom:0">
-        Try to put an eighth thing in Now and the board turns around and shows you the
-        seven already there. Finish one, move one, or drop one. It won't quietly file
-        it somewhere else for you — that decision is the entire point of the app.
+<section id="limit" class="reveal">
+  <p class="kicker">The limit is the feature</p>
+  <h3>Try to add an eighth.</h3>
+  <div class="try" style="margin-top:26px">
+    <div>
+      <p class="section-lede">
+        Now is full in this demo, the way it will be on a Tuesday. Add something and the
+        board turns around and shows you the seven you already said yes to. Finish one,
+        move one, or drop one — it will not quietly file it somewhere else for you.
       </p>
+      <p class="section-lede" style="margin-top:15px">
+        That decision <em>is</em> the app. Everything else is just somewhere to put the
+        answer.
+      </p>
+      <div class="seven-mark" aria-hidden="true">7</div>
+    </div>
+
+    <div class="demo" id="demo">
+      <div class="sec" style="margin-top:0">Now <span id="count" class="full">7 / 7</span></div>
+      <div class="gauge full" id="gauge" aria-hidden="true"></div>
+      <div id="rows"></div>
+      <button class="add" id="add" type="button">
+        <span id="addLabel">Email the registrar</span><span class="plus" aria-hidden="true">+</span>
+      </button>
+      <div class="refusal" id="refusal" role="status">
+        <h4>Now is full</h4>
+        <p>Seven is the point. Which one is leaving?</p>
+        <div class="pick" id="pick"></div>
+      </div>
+      <p class="said" id="said" role="status"></p>
     </div>
   </div>
 </section>
 
-<section>
+<section class="reveal">
   <p class="kicker">What's in it</p>
   <h3>Small, and finished.</h3>
   <div class="grid">
-    <div class="card"><h4>Yours alone</h4><p>Every note lives on your phone, in a local database. No account, no server, nothing uploaded.</p></div>
-    <div class="card"><h4>Works with no signal</h4><p>There's nothing to load. Open it on the bus, in a basement, on campus wifi that isn't.</p></div>
-    <div class="card"><h4>Drag it around</h4><p>Hold a note and move it between sections, or swipe it to edit or clear.</p></div>
-    <div class="card"><h4>Colour by urgency</h4><p>Mark what's burning. Red, amber, green — or nothing at all, which is most things.</p></div>
-    <div class="card"><h4>Quiet reminders</h4><p>Only on Now, only three choices, no date picker. Local notifications, nothing sent anywhere.</p></div>
-    <div class="card"><h4>Keep a copy</h4><p>Save the whole board to a file, or back it up to a private folder in your own Google Drive.</p></div>
+    <div class="card"><span class="tag">Yours</span><h4>Offline, on your phone</h4>
+      <p>Notes live in a database on your own phone. Open it on the bus, in a basement, on campus wifi that isn't. Nothing to load, nothing to wait for.</p></div>
+    <div class="card"><span class="tag">New</span><h4>Sign in and it follows you</h4>
+      <p>Sign in with Google on a second phone and your board is already there. It uses a private folder in your own Drive that nothing else can read.</p></div>
+    <div class="card"><span class="tag">New</span><h4>Colour <em>is</em> the note</h4>
+      <p>Mark what's burning and the whole note takes the colour — not a stripe you can't see at arm's length. The word is always there too, so colour is never the only signal.</p></div>
+    <div class="card"><span class="tag">New</span><h4>Day, night, or neither</h4>
+      <p>Follow the phone, or pick one and stay there. It's in the menu, not on the board — the board is for notes.</p></div>
+    <div class="card"><span class="tag">New</span><h4>Next week</h4>
+      <p>A fourth section for the week ahead, and a lens across the top to see only today, this week, or next.</p></div>
+    <div class="card"><span class="tag">Move it</span><h4>Drag, swipe, done</h4>
+      <p>Hold a note to move it between sections. Swipe right to edit, left to clear. Finishing one is given a beat, because clearing something you've been carrying should land.</p></div>
+    <div class="card"><span class="tag">Quiet</span><h4>Reminders that don't nag</h4>
+      <p>Only on Now, only a few choices, no date picker. They're local notifications — nothing is sent anywhere.</p></div>
+    <div class="card"><span class="tag">Yours</span><h4>Move it yourself</h4>
+      <p>Send the whole board to another phone as one file — WhatsApp, email, AirDrop. No account, no connection to us.</p></div>
+    <div class="card"><span class="tag">Honest</span><h4>Done, but bounded</h4>
+      <p>What you've finished, grouped by day, for thirty days. Nothing is deleted — the screen just refuses to become a second backlog.</p></div>
   </div>
 </section>
 
-<section id="get">
+<section class="reveal">
+  <div class="split">
+    <div>
+      <p class="kicker">Plainly</p>
+      <h3>What happens to your notes.</h3>
+      <p class="section-lede">
+        The honest version, because "private" is a word every app uses.
+      </p>
+    </div>
+    <div class="plain">
+      <p><b>Signed out, nothing leaves the phone.</b> No account, no server, no analytics, no crash reporting. There is nowhere for it to go.</p>
+      <p><b>Signed in, one file goes to your own Drive.</b> Into a hidden folder Drive keeps for each app. still. cannot read anything else in your Drive — not one other file — and no other app can read what it writes.</p>
+      <p><b>Sync only ever adds.</b> It brings the other phone's notes down, merges them in, and only then puts both boards back. Nothing you have is overwritten. A note deleted on one phone stays on the other, which is the trade for never losing work to a background job.</p>
+      <p><b>This page has no trackers.</b> The only thing it loads from elsewhere is two fonts.</p>
+    </div>
+  </div>
+</section>
+
+<section id="get" class="reveal">
   <p class="kicker">Getting it</p>
-  <h3>Not in the stores yet.</h3>
+  <h3>Heading for the Play Store.</h3>
   <p class="section-lede">
-    It's being built in the open, starting with students at one university in Pakistan.
-    The code is on GitHub, and you can run it on your own phone today with Expo.
+    Being built in the open, starting with students at one university in Pakistan. The
+    Android build is being prepared for release now; iPhone follows. The code is all
+    there in the meantime, and you can run it on your own phone today with Expo.
   </p>
   <div class="cta">
-    <a class="btn btn-main" id="repo" href="#">See the code</a>
-    <a class="btn btn-ghost" id="issues" href="#">Ask for something</a>
+    <a class="btn btn-main" id="repo" href="https://github.com/">See the code</a>
+    <a class="btn btn-ghost" id="issues" href="https://github.com/">Ask for something</a>
   </div>
+  <p class="small">React Native · Expo · SQLite · 102 tests, run against real SQLite rather than a mock.</p>
 </section>
 
 <footer>
   <div>still. — a calm board for everything you're carrying.</div>
-  <div class="built">Built in the open. React Native, Expo, SQLite. No trackers on this page.</div>
+  <div class="built">Built in the open. No trackers on this page.</div>
 </footer>
 
 </div>
 
 <script>
 (function () {
-  var btn = document.getElementById('theme');
   var root = document.documentElement;
+  var btn = document.getElementById('theme');
 
-  function dark() {
+  function isDark() {
     var set = root.getAttribute('data-theme');
     if (set) return set === 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  function paint() { btn.textContent = dark() ? 'Light' : 'Dark'; }
-
+  function paint() { btn.textContent = isDark() ? 'Light' : 'Dark'; }
   btn.addEventListener('click', function () {
-    root.setAttribute('data-theme', dark() ? 'light' : 'dark');
+    root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
     paint();
     try { localStorage.setItem('theme', root.getAttribute('data-theme')); } catch (e) {}
   });
-
   try {
     var saved = localStorage.getItem('theme');
-    if (saved) root.setAttribute('data-theme', saved);
+    if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
   } catch (e) {}
   paint();
 
-  // The repo links fill themselves in from wherever this page is served,
-  // so they keep working if the project is ever renamed or moved.
-  var parts = location.hostname.split('.');
-  var user = parts[0];
-  var repo = location.pathname.split('/').filter(Boolean)[0];
-  if (user && repo && location.hostname.indexOf('github.io') > -1) {
-    var base = 'https://github.com/' + user + '/' + repo;
-    document.getElementById('repo').href = base;
-    document.getElementById('issues').href = base + '/issues/new';
+  // The repo links fill themselves in from wherever this page is served, so
+  // they keep working if the project is ever renamed or moved.
+  var host = location.hostname;
+  if (host.indexOf('github.io') > -1) {
+    var user = host.split('.')[0];
+    var repo = location.pathname.split('/').filter(Boolean)[0];
+    if (user && repo) {
+      var base = 'https://github.com/' + user + '/' + repo;
+      document.getElementById('repo').href = base;
+      document.getElementById('issues').href = base + '/issues/new';
+    }
   }
+
+  var header = document.getElementById('top');
+  addEventListener('scroll', function () {
+    header.classList.toggle('stuck', scrollY > 8);
+  }, { passive: true });
+
+  // Sections arrive as you reach them. If IntersectionObserver isn't there,
+  // they are simply already visible — the page must not depend on this.
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -60px 0px' });
+    reveals.forEach(function (el) { io.observe(el); });
+  } else {
+    reveals.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  // ---- the limit, as something you can push against ----
+  var SEED = [
+    { t: 'Finish data structures assignment', c: 'u3' },
+    { t: 'Reply to Ayesha about the group project', c: 'u2' },
+    { t: 'Pay hostel fee', c: 'g' },
+    { t: 'Print the lab report', c: 'y' },
+    { t: 'Return the library books', c: 'l' },
+    { t: 'Top up the bus card', c: 'p' },
+    { t: 'Call home', c: 'u1' }
+  ];
+  var WAITING = ['Email the registrar', 'Book the study room', 'Renew the hostel form'];
+
+  var rows = document.getElementById('rows');
+  var gauge = document.getElementById('gauge');
+  var count = document.getElementById('count');
+  var refusal = document.getElementById('refusal');
+  var pick = document.getElementById('pick');
+  var said = document.getElementById('said');
+  var addLabel = document.getElementById('addLabel');
+  var board = SEED.slice();
+  var waitingAt = 0;
+
+  function draw() {
+    rows.innerHTML = '';
+    board.forEach(function (n) {
+      var d = document.createElement('div');
+      d.className = 'row ' + n.c;
+      d.innerHTML = '<span class="dot" style="width:14px;height:14px;border-radius:50%;' +
+        'border:1.5px solid var(--ink-faint);flex:none"></span>';
+      d.appendChild(document.createTextNode(n.t));
+      rows.appendChild(d);
+    });
+    gauge.innerHTML = '';
+    for (var i = 0; i < 7; i++) {
+      var p = document.createElement('i');
+      p.className = 'pip' + (i < board.length ? ' on' : '');
+      gauge.appendChild(p);
+    }
+    var full = board.length >= 7;
+    count.textContent = board.length + ' / 7';
+    count.className = full ? 'full' : '';
+    gauge.className = 'gauge' + (full ? ' full' : '');
+    addLabel.textContent = WAITING[waitingAt % WAITING.length];
+  }
+
+  document.getElementById('add').addEventListener('click', function () {
+    said.textContent = '';
+    if (board.length < 7) {
+      board.push({ t: WAITING[waitingAt % WAITING.length], c: 'y' });
+      waitingAt++;
+      refusal.classList.remove('show');
+      draw();
+      said.textContent = 'Added. Now has ' + board.length + '.';
+      return;
+    }
+    // Full. The refusal is the decision, not an error message.
+    pick.innerHTML = '';
+    board.forEach(function (n, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = n.t.length > 24 ? n.t.slice(0, 23) + '…' : n.t;
+      b.addEventListener('click', function () {
+        var leaving = board[i];
+        board.splice(i, 1);
+        board.push({ t: WAITING[waitingAt % WAITING.length], c: 'y' });
+        waitingAt++;
+        refusal.classList.remove('show');
+        draw();
+        said.textContent = '“' + leaving.t + '” moved to Next. Now still holds seven.';
+      });
+      pick.appendChild(b);
+    });
+    refusal.classList.add('show');
+  });
+
+  draw();
 })();
 </script>
 </body>
