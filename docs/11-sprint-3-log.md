@@ -218,3 +218,56 @@ line never nags.
 **Verified:** 35 assertions passing, `tsc` clean, both platforms bundle.
 **Not verified:** haptics have never fired — they need a real device, and they
 are the one thing here a simulator wouldn't prove either.
+
+## Sprint 3, later additions
+
+Asked mid-sprint for a different note face, dragging, reminders, Google
+sign-in, and for Someday to stop piling up. Four of the five are built.
+
+**The note face is now Caveat**, not Shantell Sans. Shantell is rounded and
+comic-ish, which reads cheerful rather than calm, and its wide letterforms
+cost line length on a phone. Caveat is a real pen hand. It is set at 19pt
+against the UI's 15 because handwriting faces carry a smaller x-height and
+would otherwise read as the quieter voice. Swapping it again is one line in
+`theme/typography.ts` plus the import in `App.tsx`.
+
+**Someday fades and folds away.** A note there starts losing opacity after 14
+days and folds into a box at the bottom after 45 — `SOMEDAY_FADE_DAYS` and
+`SOMEDAY_BOX_DAYS` in `config.ts`. The box is a drawer, not a bin: one tap
+opens it, nothing is ever deleted by age, and a test asserts every note is
+still somewhere after the split.
+
+**Reminders are schema v2**, and belong to Now alone — being nudged about
+something you have already decided isn't today is just an interruption. Three
+presets, no date picker: a picker turns "remind me" into a planning exercise.
+They are local notifications, so nothing leaves the phone. The reminder is
+stored on the note and scheduled with the OS together or not at all; if
+notifications are off, the app says so rather than showing a reminder that can
+never fire. A note leaving Now, or being finished, drops its reminder — in SQL,
+so it can't be forgotten at a call site.
+
+The v1→v2 upgrade is tested against a **real version-1 database with notes
+already in it**: all three survive, the new column arrives NULL rather than
+guessed at, the version is recorded, and a second launch doesn't migrate again.
+
+**Dragging works**, and arrived four steps earlier than planned. Long-press
+lifts a note; a line shows where it will land; dropping into a full Now is
+refused out loud. It uses React Native's own Animated and PanResponder rather
+than a gesture library — a board this size doesn't need the machinery. Every
+note and section is measured once at pick-up and the hit-testing runs against
+that snapshot, with the maths in `board/drag.ts` under 10 tests covering the
+cases a phone can't show you: the dragged note not counting against itself,
+the gaps between sections, dropping past the end of a list.
+
+One bug caught before it shipped: the pan responder was being rebuilt whenever
+drag state changed, which would have stranded a note on screen mid-gesture.
+The handlers now read state through a ref.
+
+**Google sign-in is not built** — see `docs/12-google-signin.md`. It needs
+OAuth client IDs only you can create, and more importantly sign-in without
+sync is a door to an empty room.
+
+**Verified:** 64 assertions passing, `tsc` clean, both platforms bundle.
+**Not verified:** the drag gesture, the haptics and the notifications have
+never run anywhere but a bundler. Drag especially — the measurement approach
+assumes the board doesn't scroll mid-gesture, which is true but untested.
