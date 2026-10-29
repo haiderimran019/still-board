@@ -72,7 +72,7 @@ downstream has to know the difference.
 
 | What | Where |
 | --- | --- |
-| Finished / dropped is now spoken, not only shown | `accessibilityLiveRegion` on the notice in `BoardScreen` |
+| Finished / dropped is now spoken, not only shown | `accessibilityLiveRegion` on the notice, plus an explicit announcement on iOS, which ignores it |
 | Screen reader no longer wanders onto the board behind an open sheet | `accessibilityViewIsModal` on the three transparent sheets |
 | Everything you tap clears 48dp, even where it is drawn shorter | `TAP_SLOP` in `theme/tokens.ts`, on 8 controls |
 | Urgency, theme and section choices announce as grouped choices | `accessibilityRole="radiogroup"` |

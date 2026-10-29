@@ -1,6 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
-import { Fragment, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Fragment, useEffect, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CaptureSheet } from '../components/CaptureSheet';
@@ -95,6 +103,12 @@ export function BoardScreen({
   // The tagline is for strangers; by the second launch the user isn't one, so
   // the line under the wordmark describes the board instead.
   const subtitle = headerLine(now, nowNotes.length, notes.length);
+
+  // accessibilityLiveRegion below is Android-only, so iOS has to be told the
+  // same thing in as many words. Doing both on Android would say it twice.
+  useEffect(() => {
+    if (notice && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(notice.text);
+  }, [notice]);
 
   return (
     <DragProvider
@@ -236,9 +250,9 @@ export function BoardScreen({
       </ScrollView>
 
       {/* Whatever just happened is said out loud as well as shown. Without
-          the live region a screen reader announces nothing at all when a
-          note is finished or dropped, and Undo would sit there unmentioned
-          until it timed out. */}
+          it a screen reader announces nothing at all when a note is finished
+          or dropped, and Undo would sit there unmentioned until it timed
+          out. Android reads the live region; iOS is told above. */}
       {notice && (
         <View
           accessibilityLiveRegion="polite"
