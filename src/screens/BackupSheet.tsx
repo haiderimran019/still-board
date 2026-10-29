@@ -115,7 +115,7 @@ export function BackupSheet({
         <View style={s.head}>
           <View style={s.headText}>
             <Text accessibilityRole="header" style={[type.wordmark, s.title, { color: t.c.ink }]}>
-              Keep a copy
+              Your board, elsewhere
             </Text>
             <Text style={[type.caption, { color: t.c.inkSoft }]}>
               Restoring only adds what's missing. It never overwrites or deletes.
@@ -133,12 +133,21 @@ export function BackupSheet({
         </View>
 
         <ScrollView contentContainerStyle={s.scroll}>
-          <Text style={[type.section, s.group, { color: t.c.ink }]}>As a file</Text>
+          <Text style={[type.section, s.group, { color: t.c.ink }]}>Move to another phone</Text>
           <Text style={[type.caption, s.blurb, { color: t.c.inkSoft }]}>
-            No account and no connection needed. Send it to yourself, or keep it anywhere.
+            Send the board to yourself — WhatsApp, email, AirDrop, anything — then open
+            still. on the other phone and tap Receive. No account, no connection to us.
           </Text>
-          <Button label="Save a copy" hint="Write the whole board to a file" onPress={saveFile} />
-          <Button label="Restore from a file" hint="Pick a backup you saved" onPress={openFile} />
+          <Button
+            label="Send the board"
+            hint="Share the whole board as one file"
+            onPress={saveFile}
+          />
+          <Button
+            label="Receive a board"
+            hint="Pick the file you sent yourself"
+            onPress={openFile}
+          />
 
           <Text style={[type.section, s.group, { color: t.c.ink }]}>Google Drive</Text>
           {/* Rendered as a separate component, and only when there are client
@@ -148,8 +157,8 @@ export function BackupSheet({
             <GoogleBackup busy={busy} json={json} restoreFrom={restoreFrom} run={run} Button={Button} />
           ) : (
             <Text style={[type.caption, s.blurb, { color: t.c.inkFaint }]}>
-              Not set up yet. It needs Google OAuth client IDs in src/config.ts —
-              see docs/12-google-signin.md. Saving to a file works without it.
+              Not switched on in this build. Sending the board as a file above does the
+              same job and needs no account.
             </Text>
           )}
 

@@ -71,7 +71,7 @@ export function MenuSheet({
             }
             onPress={onDone}
           />
-          <Row label="Keep a copy" hint="Save the board, or back it up" onPress={onBackup} />
+          <Row label="Your board, elsewhere" hint="Move it to another phone, or keep a copy" onPress={onBackup} />
         </View>
       </View>
     </Modal>
