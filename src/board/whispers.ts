@@ -10,6 +10,8 @@
  * argued about, so it should be the part easiest to test and change.
  */
 
+import { SOMEDAY_BOX_DAYS, SOMEDAY_FADE_DAYS } from '../config';
+
 const DAY = 86_400_000;
 
 export type PartOfDay = 'morning' | 'afternoon' | 'evening' | 'late';
@@ -74,4 +76,42 @@ export function ageWhisper(createdAt: number, now: number): string | null {
 export function clearedToday(completedAt: readonly number[], now: Date): number {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   return completedAt.filter((t) => t >= start).length;
+}
+
+/**
+ * How strongly a Someday note still asks to be seen.
+ *
+ * Someday is where you put something down. Anything that sits there for weeks
+ * has answered its own question, so it quietly loses its grip on your
+ * attention rather than being deleted behind your back — it is all still
+ * there, just no longer shouting.
+ *
+ * 1 while it is fresh, easing to 0.4 by the time it is ready for the box.
+ */
+export function somedayFade(createdAt: number, now: number): number {
+  const d = daysHeld(createdAt, now);
+  if (d <= SOMEDAY_FADE_DAYS) return 1;
+  if (d >= SOMEDAY_BOX_DAYS) return 0.4;
+  const through = (d - SOMEDAY_FADE_DAYS) / (SOMEDAY_BOX_DAYS - SOMEDAY_FADE_DAYS);
+  return Number((1 - through * 0.6).toFixed(3));
+}
+
+/**
+ * Splits Someday into what is still on the board and what has folded itself
+ * into the box. Nothing is ever deleted by age — the box is a drawer, not a
+ * bin, and one tap opens it.
+ */
+export function splitSomeday<T extends { createdAt: number }>(
+  notes: readonly T[],
+  now: number
+): { out: T[]; boxed: T[] } {
+  const out: T[] = [];
+  const boxed: T[] = [];
+  for (const n of notes) (daysHeld(n.createdAt, now) >= SOMEDAY_BOX_DAYS ? boxed : out).push(n);
+  return { out, boxed };
+}
+
+/** What the closed box says about itself. */
+export function boxLabel(count: number): string {
+  return count === 1 ? '1 idea resting' : `${count} ideas resting`;
 }

@@ -18,3 +18,12 @@ export const NOW_LIMIT = 7;
 
 /** How far back the Done list reaches before it stops piling up. */
 export const DONE_WINDOW_DAYS = 30;
+
+/**
+ * Someday is a place to put things down, not a backlog to carry. A note left
+ * there starts to fade after this many days...
+ */
+export const SOMEDAY_FADE_DAYS = 14;
+
+/** ...and after this many it folds itself into the box at the bottom. */
+export const SOMEDAY_BOX_DAYS = 45;

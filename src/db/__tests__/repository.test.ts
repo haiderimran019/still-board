@@ -173,6 +173,36 @@ try {
     assert.deepEqual(after, before, 'nothing moved, nothing lost');
   });
 
+  await test('reminders belong to Now and nowhere else', async () => {
+    await repo.__resetAll();
+    const inNow = await repo.create('Submit the form', 'now');
+    const inNext = await repo.create('Tidy the room', 'next');
+    const when = Date.now() + 3_600_000;
+
+    await repo.setReminder(inNow.id, when);
+    await repo.setReminder(inNext.id, when);
+    await relaunch();
+
+    const board = await repo.listBoard();
+    assert.equal(board.find((n) => n.id === inNow.id)?.remindAt, when);
+    assert.equal(board.find((n) => n.id === inNext.id)?.remindAt, null, 'Next cannot be reminded');
+  });
+
+  await test('a note leaving Now gives up its reminder', async () => {
+    const note = (await repo.listBoard()).find((n) => n.remindAt !== null)!;
+    await repo.moveToEnd(note.id, 'someday');
+    await relaunch();
+    assert.equal((await repo.listBoard()).find((n) => n.id === note.id)?.remindAt, null);
+  });
+
+  await test('finishing a note cancels its reminder', async () => {
+    const note = await repo.create('Pick up the parcel', 'now');
+    await repo.setReminder(note.id, Date.now() + 3_600_000);
+    await repo.complete(note.id);
+    await relaunch();
+    assert.equal((await repo.listDone()).find((n) => n.id === note.id)?.remindAt, null);
+  });
+
   console.log(`\n${passed} repository tests passed (real SQLite, reopened from disk)`);
 } finally {
   rmSync(dir, { recursive: true, force: true });

@@ -12,9 +12,17 @@ export async function migrate(db: Db): Promise<void> {
 
   await db.withTransactionAsync(async () => {
     if (from < 1) {
+      // A fresh install gets the current shape in one go — CREATE_SQL always
+      // describes the latest schema, so the steps below are skipped.
       await db.execAsync(CREATE_SQL);
+    } else if (from < 2) {
+      // v2 adds reminders. ALTER TABLE ... ADD COLUMN keeps every existing
+      // row and backfills NULL, so nobody's board is touched.
+      await db.execAsync('ALTER TABLE notes ADD COLUMN remind_at INTEGER');
+      await db.execAsync(
+        'CREATE INDEX IF NOT EXISTS notes_due ON notes (remind_at) WHERE remind_at IS NOT NULL'
+      );
     }
-    // Future versions go here as `if (from < 2) { ... }`, each one additive.
     await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   });
 }

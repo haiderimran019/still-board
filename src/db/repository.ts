@@ -102,6 +102,7 @@ export async function create(text: string, section: Section): Promise<Note> {
     createdAt: t,
     updatedAt: t,
     completedAt: null,
+    remindAt: null,
   };
   await d.runAsync(
     `INSERT INTO notes (id, text, section, position, tint, created_at, updated_at, completed_at)
@@ -109,6 +110,19 @@ export async function create(text: string, section: Section): Promise<Note> {
     [note.id, note.text, note.section, note.position, note.tint, note.createdAt, note.updatedAt]
   );
   return note;
+}
+
+/**
+ * Sets or clears a note's reminder. Only Now gets them: a reminder for
+ * something you have already decided isn't today is just an interruption.
+ */
+export async function setReminder(noteId: string, at: number | null): Promise<void> {
+  const d = await db();
+  await d.runAsync('UPDATE notes SET remind_at = ?, updated_at = ? WHERE id = ? AND section = \'now\'', [
+    at,
+    now(),
+    noteId,
+  ]);
 }
 
 export async function edit(noteId: string, text: string): Promise<void> {
@@ -148,21 +162,21 @@ export async function place(noteId: string, section: Section, index: number): Pr
     });
     const b = i > 0 ? spread[i - 1] : null;
     const a = i < spread.length ? spread[i] : null;
-    await d.runAsync('UPDATE notes SET section = ?, position = ?, updated_at = ? WHERE id = ?', [
-      section,
-      between(b, a),
-      now(),
-      noteId,
-    ]);
+    await d.runAsync(
+      `UPDATE notes SET section = ?, position = ?, updated_at = ?,
+         remind_at = CASE WHEN ? = 'now' THEN remind_at ELSE NULL END
+       WHERE id = ?`,
+      [section, between(b, a), now(), section, noteId]
+    );
     return;
   }
 
-  await d.runAsync('UPDATE notes SET section = ?, position = ?, updated_at = ? WHERE id = ?', [
-    section,
-    between(before, after),
-    now(),
-    noteId,
-  ]);
+  await d.runAsync(
+    `UPDATE notes SET section = ?, position = ?, updated_at = ?,
+       remind_at = CASE WHEN ? = 'now' THEN remind_at ELSE NULL END
+     WHERE id = ?`,
+    [section, between(before, after), now(), section, noteId]
+  );
 }
 
 /** Appends to the end of a section — what the "move to" menu does. */
@@ -174,7 +188,11 @@ export async function moveToEnd(noteId: string, section: Section): Promise<void>
 export async function complete(noteId: string): Promise<void> {
   const d = await db();
   const t = now();
-  await d.runAsync('UPDATE notes SET completed_at = ?, updated_at = ? WHERE id = ?', [t, t, noteId]);
+  // A finished note has nothing left to remind you about.
+  await d.runAsync(
+    'UPDATE notes SET completed_at = ?, updated_at = ?, remind_at = NULL WHERE id = ?',
+    [t, t, noteId]
+  );
 }
 
 /** Undo for a completed note: back to the board, at the end of its section. */

@@ -5,7 +5,7 @@ import { Gabarito_400Regular } from '@expo-google-fonts/gabarito/400Regular';
 import { Gabarito_500Medium } from '@expo-google-fonts/gabarito/500Medium';
 import { Gabarito_600SemiBold } from '@expo-google-fonts/gabarito/600SemiBold';
 import { Gabarito_700Bold } from '@expo-google-fonts/gabarito/700Bold';
-import { ShantellSans_500Medium } from '@expo-google-fonts/shantell-sans/500Medium';
+import { Caveat_600SemiBold } from '@expo-google-fonts/caveat/600SemiBold';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -23,10 +23,24 @@ export default function App() {
     Gabarito_500Medium,
     Gabarito_600SemiBold,
     Gabarito_700Bold,
-    ShantellSans_500Medium,
+    Caveat_600SemiBold,
   });
 
-  const { notes, nowNotes, doneCount, todayCount, bootError, create, swapIntoNow } = useBoard();
+  const {
+    notes,
+    nowNotes,
+    doneCount,
+    todayCount,
+    bootError,
+    notice,
+    create,
+    swapIntoNow,
+    edit,
+    move,
+    complete,
+    remove,
+    remind,
+  } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
   if (!fontsReady || notes === null) return <Booting />;
@@ -38,8 +52,14 @@ export default function App() {
         nowNotes={nowNotes}
         doneCount={doneCount}
         todayCount={todayCount}
+        notice={notice}
         onCreate={create}
         onSwap={swapIntoNow}
+        onEdit={edit}
+        onMove={move}
+        onComplete={complete}
+        onDelete={remove}
+        onRemind={remind}
       />
     </SafeAreaProvider>
   );

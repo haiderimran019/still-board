@@ -301,7 +301,7 @@ const s = StyleSheet.create({
     paddingBottom: space.xl,
   },
   grab: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: space.lg },
-  input: { minHeight: 72, maxHeight: 160, textAlignVertical: 'top', fontSize: 17, lineHeight: 24 },
+  input: { minHeight: 72, maxHeight: 160, textAlignVertical: 'top', fontSize: 21, lineHeight: 28 },
   pills: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   pill: {
     borderWidth: 1,

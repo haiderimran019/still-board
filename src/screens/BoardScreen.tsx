@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CaptureSheet } from '../components/CaptureSheet';
 import { NoteCard } from '../components/NoteCard';
+import { NoteSheet } from '../components/NoteSheet';
+import { SomedayBox } from '../components/SomedayBox';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
-import { headerLine } from '../board/whispers';
+import { headerLine, somedayFade, splitSomeday } from '../board/whispers';
 import { APP_NAME } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
@@ -23,8 +25,14 @@ type Props = {
   doneCount: number;
   /** Cleared since midnight — today only, because a running total is a score. */
   todayCount: number;
+  notice: string | null;
   onCreate: (text: string, section: Section) => Promise<void>;
   onSwap: (text: string, outgoingId: string, how: FreeUp) => Promise<void>;
+  onEdit: (id: string, text: string) => Promise<void>;
+  onMove: (id: string, section: Section) => Promise<void>;
+  onComplete: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onRemind: (id: string, at: number | null) => Promise<void>;
 };
 
 /**
@@ -33,9 +41,24 @@ type Props = {
  * The composer bar at the top is the only way in: tapping it opens the
  * capture sheet. Tapping a note comes in step 5, completing it in step 6.
  */
-export function BoardScreen({ notes, nowNotes, doneCount, todayCount, onCreate, onSwap }: Props) {
+export function BoardScreen({
+  notes,
+  nowNotes,
+  doneCount,
+  todayCount,
+  notice,
+  onCreate,
+  onSwap,
+  onEdit,
+  onMove,
+  onComplete,
+  onDelete,
+  onRemind,
+}: Props) {
   const t = useTheme();
   const [capturing, setCapturing] = useState(false);
+  const [boxOpen, setBoxOpen] = useState(false);
+  const [opened, setOpened] = useState<Note | null>(null);
   const bySection = (s: Section) => notes.filter((n) => n.section === s);
 
   // The tagline is for strangers; by the second launch the user isn't one, so
@@ -90,15 +113,14 @@ export function BoardScreen({ notes, nowNotes, doneCount, todayCount, onCreate, 
                 <SectionHeading section={section} count={items.length} />
                 {section === 'now' && <NowGauge count={items.length} />}
 
-                <View style={s.notes}>
-                  {items.length === 0 ? (
-                    <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
-                      {SECTION_COPY[section].empty}
-                    </Text>
-                  ) : (
-                    items.map((note, i) => <NoteCard key={note.id} note={note} index={i} />)
-                  )}
-                </View>
+                <SectionNotes
+                  section={section}
+                  items={items}
+                  open={boxOpen}
+                  onToggleBox={() => setBoxOpen((v) => !v)}
+                  onOpen={setOpened}
+                  onComplete={(n) => onComplete(n.id)}
+                />
               </View>
             </Fragment>
           );
@@ -109,6 +131,22 @@ export function BoardScreen({ notes, nowNotes, doneCount, todayCount, onCreate, 
         </Text>
       </ScrollView>
 
+      {notice && (
+        <View style={[s.notice, { backgroundColor: t.c.ink }]} pointerEvents="none">
+          <Text style={[type.caption, { color: t.c.board }]}>{notice}</Text>
+        </View>
+      )}
+
+      <NoteSheet
+        note={opened}
+        onClose={() => setOpened(null)}
+        onEdit={onEdit}
+        onMove={onMove}
+        onComplete={onComplete}
+        onDelete={onDelete}
+        onRemind={onRemind}
+      />
+
       <CaptureSheet
         visible={capturing}
         nowNotes={nowNotes}
@@ -117,6 +155,72 @@ export function BoardScreen({ notes, nowNotes, doneCount, todayCount, onCreate, 
         onSwap={onSwap}
       />
     </SafeAreaView>
+  );
+}
+
+/**
+ * The notes of one section. Now and Next are a plain list; Someday is the
+ * only one that ages — its notes fade, and the oldest fold into the box.
+ */
+function SectionNotes({
+  section,
+  items,
+  open,
+  onToggleBox,
+  onOpen,
+  onComplete,
+}: {
+  section: Section;
+  items: Note[];
+  open: boolean;
+  onToggleBox: () => void;
+  onOpen: (note: Note) => void;
+  onComplete: (note: Note) => void;
+}) {
+  const t = useTheme();
+
+  if (items.length === 0) {
+    return (
+      <View style={s.notes}>
+        <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
+          {SECTION_COPY[section].empty}
+        </Text>
+      </View>
+    );
+  }
+
+  if (section !== 'someday') {
+    return (
+      <View style={s.notes}>
+        {items.map((note, i) => (
+          <NoteCard key={note.id} note={note} index={i} onPress={onOpen} onComplete={onComplete} />
+        ))}
+      </View>
+    );
+  }
+
+  const now = Date.now();
+  const { out, boxed } = splitSomeday(items, now);
+
+  return (
+    <View style={s.notes}>
+      {out.map((note, i) => (
+        <NoteCard
+          key={note.id}
+          note={note}
+          index={i}
+          fade={somedayFade(note.createdAt, now)}
+          onPress={onOpen}
+          onComplete={onComplete}
+        />
+      ))}
+      {out.length === 0 && boxed.length > 0 && (
+        <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
+          Everything here has settled into the box.
+        </Text>
+      )}
+      <SomedayBox notes={boxed} open={open} onToggle={onToggleBox} onOpen={onOpen} />
+    </View>
   );
 }
 
@@ -151,4 +255,13 @@ const s = StyleSheet.create({
   notes: { gap: 10, marginTop: space.md },
   empty: { fontStyle: 'italic' },
   foot: { textAlign: 'center', paddingHorizontal: space.lg },
+  notice: {
+    position: 'absolute',
+    left: space.lg,
+    right: space.lg,
+    bottom: space.xl,
+    borderRadius: radius.card,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
+  },
 });
