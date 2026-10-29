@@ -87,3 +87,58 @@ Nothing has run on a phone or in Expo Go. This machine has no iOS runtime
 installed and no Android emulator, so the `expo-sqlite` driver itself — as
 opposed to the SQL and the logic above it — is still untested. That is the one
 thing the next run on a real device needs to confirm.
+
+## Step 3 — the board screen (read-only)
+
+**Built**
+
+`App.tsx` is now boot and state only. Everything on screen moved into pieces
+that can be reasoned about one at a time:
+
+- `src/screens/BoardScreen.tsx` — the whole board on one screen, Now then Next
+  then Someday, always in that order.
+- `src/components/NoteCard.tsx` — one sticky note. The tilt comes from the
+  note's index, so a note keeps its angle across re-renders instead of
+  twitching every time the board refreshes. Memoised, because a refresh
+  re-renders every note and almost none of them have changed.
+- `src/components/NowGauge.tsx` — how full Now is.
+- `src/components/SectionHeading.tsx` — name, reason, count. Only Now shows a
+  denominator, because only Now has a ceiling.
+- `src/screens/sectionCopy.ts` — every word the board says, in one file.
+- `src/screens/BootScreens.tsx` — the holding and failure screens from step 2.
+
+**The 7 limit, shown three ways**
+
+The gauge states a full Now through filled pips, the `7 / 7` count, *and* a
+line of text. Colour never carries the meaning on its own — the accessibility
+rule this board is held to, and also what makes it readable in sunlight. The
+wording is "Now is full — that's the point of it", not a warning: a full Now is
+a fact about the board, not a mistake the user made.
+
+**A correction found while verifying**
+
+Exporting the bundle showed **5.2MB of fonts** in it. Importing from
+`@expo-google-fonts/gabarito` pulls in every weight the family ships, and we
+draw with five faces. Importing each weight by its own subpath instead:
+
+| | before | after |
+|---|---|---|
+| fonts in bundle | 5.2 MB | 796 KB |
+| exported app | 6.9 MB | 2.4 MB |
+
+Worth catching now rather than at launch — the first users are students in
+Pakistan, where download size and storage are not free.
+
+**Verified**
+
+- `npm test` — 21 assertions still passing.
+- `tsc --noEmit` — clean.
+- `npx expo export` — bundles without error for **both iOS and Android**, which
+  exercises every import in the app including `expo-sqlite`.
+
+**Not verified**
+
+Still nothing on a real phone, and this machine has no simulator to put one on.
+Bundling proves the app *builds* for a phone; it does not prove it *looks*
+right on one. Layout, the font rendering, the tilt, dark mode and the safe-area
+insets all need eyes on a device.
