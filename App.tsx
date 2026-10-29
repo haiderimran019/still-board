@@ -26,7 +26,7 @@ export default function App() {
     ShantellSans_500Medium,
   });
 
-  const { notes, nowNotes, doneCount, bootError, create, swapIntoNow } = useBoard();
+  const { notes, nowNotes, doneCount, todayCount, bootError, create, swapIntoNow } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
   if (!fontsReady || notes === null) return <Booting />;
@@ -37,6 +37,7 @@ export default function App() {
         notes={notes}
         nowNotes={nowNotes}
         doneCount={doneCount}
+        todayCount={todayCount}
         onCreate={create}
         onSwap={swapIntoNow}
       />

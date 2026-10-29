@@ -14,6 +14,7 @@ import {
 import { NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
+import { feel } from '../feel/haptics';
 import { SECTION_COPY } from '../screens/sectionCopy';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
@@ -63,11 +64,13 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
   const submit = async () => {
     if (!canSubmit) return;
     if (section === 'now' && nowFull) {
+      feel.refused();
       setStage('full');
       return;
     }
     setBusy(true);
     await onCreate(trimmed, section);
+    feel.added();
     onClose();
   };
 
@@ -75,6 +78,7 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
     if (busy) return;
     setBusy(true);
     await onSwap(trimmed, outgoingId, how);
+    feel.resolved();
     onClose();
   };
 
@@ -82,6 +86,7 @@ export function CaptureSheet({ visible, nowNotes, onClose, onCreate, onSwap }: P
     if (busy) return;
     setBusy(true);
     await onCreate(trimmed, 'next');
+    feel.added();
     onClose();
   };
 

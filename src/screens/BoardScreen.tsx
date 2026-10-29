@@ -7,7 +7,8 @@ import { CaptureSheet } from '../components/CaptureSheet';
 import { NoteCard } from '../components/NoteCard';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
-import { APP_NAME, TAGLINE } from '../config';
+import { headerLine } from '../board/whispers';
+import { APP_NAME } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
@@ -20,6 +21,8 @@ type Props = {
   notes: Note[];
   nowNotes: Note[];
   doneCount: number;
+  /** Cleared since midnight — today only, because a running total is a score. */
+  todayCount: number;
   onCreate: (text: string, section: Section) => Promise<void>;
   onSwap: (text: string, outgoingId: string, how: FreeUp) => Promise<void>;
 };
@@ -30,10 +33,15 @@ type Props = {
  * The composer bar at the top is the only way in: tapping it opens the
  * capture sheet. Tapping a note comes in step 5, completing it in step 6.
  */
-export function BoardScreen({ notes, nowNotes, doneCount, onCreate, onSwap }: Props) {
+export function BoardScreen({ notes, nowNotes, doneCount, todayCount, onCreate, onSwap }: Props) {
   const t = useTheme();
   const [capturing, setCapturing] = useState(false);
   const bySection = (s: Section) => notes.filter((n) => n.section === s);
+
+  // The tagline is for strangers; by the second launch the user isn't one, so
+  // the line under the wordmark describes the board instead.
+  const subtitle = headerLine(new Date(), nowNotes.length, notes.length);
+  const chip = todayCount > 0 ? `${todayCount} cleared today` : doneCount > 0 ? `${doneCount} done` : null;
 
   return (
     <SafeAreaView style={[s.screen, { backgroundColor: t.c.board }]} edges={['top', 'bottom']}>
@@ -48,11 +56,11 @@ export function BoardScreen({ notes, nowNotes, doneCount, onCreate, onSwap }: Pr
         <View style={s.head}>
           <View style={s.headText}>
             <Text style={[type.wordmark, { color: t.c.ink }]}>{APP_NAME}</Text>
-            <Text style={[type.caption, { color: t.c.inkSoft }]}>{TAGLINE}</Text>
+            <Text style={[type.caption, { color: t.c.inkSoft }]}>{subtitle}</Text>
           </View>
-          {doneCount > 0 && (
+          {chip && (
             <View style={[s.chip, { backgroundColor: t.c.accent + '22' }]}>
-              <Text style={[type.caption, { color: t.c.accent }]}>{doneCount} done</Text>
+              <Text style={[type.caption, { color: t.c.accent }]}>{chip}</Text>
             </View>
           )}
         </View>
@@ -97,7 +105,7 @@ export function BoardScreen({ notes, nowNotes, doneCount, onCreate, onSwap }: Pr
         })}
 
         <Text style={[type.caption, s.foot, { color: t.c.inkFaint }]}>
-          Step 4 · tap the bar at the top to write a note. Fill Now to seven and try again.
+          Step 4 · tap the bar to write. Fill Now to seven and try adding one more.
         </Text>
       </ScrollView>
 

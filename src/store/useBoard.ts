@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { clearedToday } from '../board/whispers';
 import * as repo from '../db/repository';
 import type { FreeUp } from '../db/repository';
 import type { Note, Section } from '../db/schema';
@@ -14,13 +15,13 @@ import type { Note, Section } from '../db/schema';
  */
 export function useBoard() {
   const [notes, setNotes] = useState<Note[] | null>(null);
-  const [doneCount, setDoneCount] = useState(0);
+  const [done, setDone] = useState<Note[]>([]);
   const [bootError, setBootError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const [board, done] = await Promise.all([repo.listBoard(), repo.listDone()]);
+    const [board, cleared] = await Promise.all([repo.listBoard(), repo.listDone()]);
     setNotes(board);
-    setDoneCount(done.length);
+    setDone(cleared);
   }, []);
 
   useEffect(() => {
@@ -54,5 +55,20 @@ export function useBoard() {
 
   const nowNotes = useMemo(() => (notes ?? []).filter((n) => n.section === 'now'), [notes]);
 
-  return { notes, nowNotes, doneCount, bootError, refresh, create, swapIntoNow };
+  /** Recomputed on every refresh rather than stored, so it can't go stale at midnight. */
+  const todayCount = useMemo(
+    () => clearedToday(done.map((n) => n.completedAt ?? 0), new Date()),
+    [done]
+  );
+
+  return {
+    notes,
+    nowNotes,
+    doneCount: done.length,
+    todayCount,
+    bootError,
+    refresh,
+    create,
+    swapIntoNow,
+  };
 }

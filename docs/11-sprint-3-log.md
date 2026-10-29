@@ -181,3 +181,40 @@ board, is a few lines in `CaptureSheet`.
 The sheet itself has never been on a screen. Keyboard behaviour, the sheet
 height with the keyboard up, and whether autofocus fires inside a modal on
 Android are all things only a device will tell us.
+
+## Step 4b — warmth, without new screens
+
+Asked for something more inventive that doesn't cost simplicity. The rule I
+held to: **no new screens, no new taps, nothing that can be lost at.** Four
+additions, all of them things the board already knew and wasn't saying.
+
+**1. The line under the wordmark now describes the board.** A tagline is for
+strangers, and by the second launch the user isn't one. It reads
+`Morning · 3 in Now`, or `A clean board.` when there is nothing. After 10pm it
+stops counting and says *"Late — most of this can wait for tomorrow."* — the
+one time the app offers an opinion, and it offers permission.
+
+**2. A note that has sat in Now for four days says how long it has been
+there.** Just the age: `here 4 days`, `here a week`. Never "still", "overdue"
+or "should" — there is a test that fails if any of those words appear. Now is
+meant to turn over; noticing that it hasn't is the user's job, not the app's
+to announce. Next and Someday never get this, because sitting there is what
+they are *for*.
+
+**3. The chip counts today, not forever.** `2 cleared today` while it is true,
+falling back to the total. A running total becomes a score, and a score is a
+thing you can be losing at.
+
+**4. Haptics, at three moments only** — a note landing, Now refusing, a note
+making room. Nothing for scrolling, typing, opening or closing: a buzzing task
+app is the opposite of calm. Every call swallows its own error so a phone with
+the motor off can't take a write down with it.
+
+All the wording lives in `src/board/whispers.ts` as pure functions, because
+copy is the part most likely to be argued about and so should be the easiest
+to test and change. 10 tests cover it, including the one asserting the age
+line never nags.
+
+**Verified:** 35 assertions passing, `tsc` clean, both platforms bundle.
+**Not verified:** haptics have never fired — they need a real device, and they
+are the one thing here a simulator wouldn't prove either.

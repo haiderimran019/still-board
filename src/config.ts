@@ -6,6 +6,8 @@
 export const APP_NAME = 'still.';
 
 /** The positioning line, shown on the board and in onboarding. */
+/** For strangers: the onboarding cards in step 8. The board itself describes
+ *  what is on it instead — see board/whispers.ts. */
 export const TAGLINE = 'Your life, on one calm board.';
 
 /**
