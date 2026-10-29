@@ -18,6 +18,8 @@ export type Palette = {
   warn: string;         // Now at its limit — never the only signal
   notes: [string, string, string, string];  // yellow, mint, lilac, peach
   noteEdge: string;
+  /** Urgency 1, 2, 3 — green, amber, red. Index 0 has no colour by design. */
+  urgency: [string, string, string];
 };
 
 export const light: Palette = {
@@ -32,6 +34,9 @@ export const light: Palette = {
   warn: '#9c5d12',
   notes: ['#ffeba3', '#cdeed6', '#ded8f2', '#ffd4c2'],
   noteEdge: 'rgba(58,48,38,0.12)',
+  // Chosen to clear 3:1 against every one of the four note colours above,
+  // which is the contrast floor for a graphic that carries meaning.
+  urgency: ['#1e7a48', '#9a6a00', '#b3261e'],
 };
 
 /** Designed, not inverted: the same four stationery hues taken down to night. */
@@ -47,6 +52,7 @@ export const dark: Palette = {
   warn: '#e8a74e',
   notes: ['#4a3f1e', '#2d4031', '#37314f', '#4a3328'],
   noteEdge: 'rgba(0,0,0,0.4)',
+  urgency: ['#6fd39b', '#e8c04e', '#ff8a7a'],
 };
 
 /** Shadows differ per theme: on cream a solid drop-edge reads as paper; on near-black it doesn't. */

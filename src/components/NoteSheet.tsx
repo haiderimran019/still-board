@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 
 import { reminderChoices, reminderLabel } from '../board/schedule';
+import { URGENCY } from '../board/urgency';
 import { NOTE_FACE } from '../config';
-import { SECTIONS, type Note, type Section } from '../db/schema';
+import { PRIORITIES, SECTIONS, type Note, type Priority, type Section } from '../db/schema';
 import { SECTION_COPY } from '../screens/sectionCopy';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
@@ -27,6 +28,7 @@ type Props = {
   onComplete: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onRemind: (id: string, at: number | null) => Promise<void>;
+  onUrgency: (id: string, priority: Priority) => Promise<void>;
 };
 
 /**
@@ -44,18 +46,16 @@ export function NoteSheet({
   onComplete,
   onDelete,
   onRemind,
+  onUrgency,
 }: Props) {
   const t = useTheme();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  // Deleting is the only thing on this sheet that cannot be undone.
-  const [armed, setArmed] = useState(false);
 
   useEffect(() => {
     if (note) {
       setText(note.text);
       setBusy(false);
-      setArmed(false);
     }
   }, [note]);
 
@@ -145,6 +145,42 @@ export function NoteSheet({
             )}
 
             <View style={s.block}>
+              <Text style={[type.label, s.blockTitle, { color: t.c.inkSoft }]}>How urgent</Text>
+              <View style={s.pills}>
+                {PRIORITIES.map((p) => {
+                  const on = note.priority === p;
+                  const colour = p === 0 ? t.c.inkFaint : t.c.urgency[p - 1];
+                  return (
+                    <Pressable
+                      key={p}
+                      disabled={busy}
+                      // Set straight away and leave the sheet open: urgency is
+                      // the one thing you might change your mind about twice.
+                      onPress={() => void onUrgency(note.id, p)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: on }}
+                      accessibilityLabel={URGENCY[p].label}
+                      style={({ pressed }) => [
+                        s.pill,
+                        s.urgent,
+                        {
+                          borderColor: on ? colour : t.c.rule,
+                          borderWidth: on ? 2 : 1,
+                          opacity: pressed ? 0.6 : 1,
+                        },
+                      ]}
+                    >
+                      {p > 0 && <View style={[s.swatch, { backgroundColor: colour }]} />}
+                      <Text style={[type.label, { color: on ? t.c.ink : t.c.inkSoft }]}>
+                        {URGENCY[p].label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={s.block}>
               <Text style={[type.label, s.blockTitle, { color: t.c.inkSoft }]}>Move to</Text>
               <View style={s.pills}>
                 {elsewhere.map((section) => (
@@ -182,16 +218,12 @@ export function NoteSheet({
 
             <Pressable
               disabled={busy}
-              onPress={() => (armed ? act(() => onDelete(note.id)) : setArmed(true))}
+              onPress={() => act(() => onDelete(note.id))}
               accessibilityRole="button"
-              accessibilityLabel={
-                armed ? 'Tap again to delete this note for good' : 'Delete this note'
-              }
+              accessibilityLabel="Drop this note. You can undo it."
               style={({ pressed }) => [s.quiet, { opacity: pressed ? 0.5 : 1 }]}
             >
-              <Text style={[type.caption, { color: t.c.warn }]}>
-                {armed ? 'Tap again — this one cannot be undone' : 'Drop it instead'}
-              </Text>
+              <Text style={[type.caption, { color: t.c.warn }]}>Drop it instead</Text>
             </Pressable>
           </ScrollView>
         </View>
@@ -239,4 +271,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   quiet: { minHeight: MIN_TAP, alignItems: 'center', justifyContent: 'center' },
+  urgent: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  swatch: { width: 10, height: 10, borderRadius: 5 },
 });

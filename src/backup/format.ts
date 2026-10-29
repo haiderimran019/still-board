@@ -1,5 +1,5 @@
 import { APP_NAME } from '../config';
-import { SECTIONS, type Note, type Section } from '../db/schema';
+import { PRIORITIES, SECTIONS, type Note, type Priority, type Section } from '../db/schema';
 
 /**
  * A board, as a file.
@@ -71,6 +71,10 @@ function readNote(raw: unknown): Note | null {
     updatedAt: r.updatedAt,
     completedAt: num(r.completedAt) ? r.completedAt : null,
     remindAt: num(r.remindAt) ? r.remindAt : null,
+    // Backups written before urgency existed simply have none.
+    priority: (PRIORITIES as readonly number[]).includes(r.priority as number)
+      ? (r.priority as Priority)
+      : 0,
   };
 }
 

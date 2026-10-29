@@ -15,13 +15,21 @@ export async function migrate(db: Db): Promise<void> {
       // A fresh install gets the current shape in one go — CREATE_SQL always
       // describes the latest schema, so the steps below are skipped.
       await db.execAsync(CREATE_SQL);
-    } else if (from < 2) {
-      // v2 adds reminders. ALTER TABLE ... ADD COLUMN keeps every existing
-      // row and backfills NULL, so nobody's board is touched.
-      await db.execAsync('ALTER TABLE notes ADD COLUMN remind_at INTEGER');
-      await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS notes_due ON notes (remind_at) WHERE remind_at IS NOT NULL'
-      );
+    } else {
+      // Each step is additive and runs in order, so a phone two versions
+      // behind catches up in one go without the table ever being dropped.
+      if (from < 2) {
+        // v2 adds reminders.
+        await db.execAsync('ALTER TABLE notes ADD COLUMN remind_at INTEGER');
+        await db.execAsync(
+          'CREATE INDEX IF NOT EXISTS notes_due ON notes (remind_at) WHERE remind_at IS NOT NULL'
+        );
+      }
+      if (from < 3) {
+        // v3 adds urgency. Existing notes get 0 — no priority — which is
+        // the truth about them rather than a guess.
+        await db.execAsync('ALTER TABLE notes ADD COLUMN priority INTEGER NOT NULL DEFAULT 0');
+      }
     }
     await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   });

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clearedToday } from '../board/whispers';
 import * as repo from '../db/repository';
 import type { FreeUp } from '../db/repository';
-import type { Note, Section } from '../db/schema';
+import type { Note, Priority, Section } from '../db/schema';
 
 /** A line the board says, and optionally the way to take it back. */
 export type Notice = { text: string; undo?: () => Promise<void> };
@@ -115,16 +115,27 @@ export function useBoard() {
     [refresh, say]
   );
 
-  /** Deleting is the one thing here that cannot be taken back, so the sheet
-   *  asks twice before it gets this far. */
+  /**
+   * Dropping a note, undoably.
+   *
+   * The whole note is held onto first, so Undo can put it back exactly as it
+   * was — same id, same place in its section, same colour. That is better
+   * than asking "are you sure?": a confirmation makes you stop and think
+   * every single time, where an undo only costs you anything on the rare
+   * occasion you were wrong.
+   */
   const remove = useCallback(
     async (id: string) => {
+      const gone = (notes ?? []).find((n) => n.id === id) ?? done.find((n) => n.id === id);
       await reminders.cancel(id);
       await repo.remove(id);
       await refresh();
-      say('Dropped.');
+      say('Dropped.', gone ? async () => {
+        await repo.importNotes([gone]);
+        await refresh();
+      } : undefined);
     },
-    [refresh, say]
+    [done, notes, refresh, say]
   );
 
   /**
@@ -152,6 +163,14 @@ export function useBoard() {
       await refresh();
     },
     [notes, refresh, say]
+  );
+
+  const setUrgency = useCallback(
+    async (id: string, priority: Priority) => {
+      await repo.setPriority(id, priority);
+      await refresh();
+    },
+    [refresh]
   );
 
   const exportAll = useCallback(() => repo.exportAll(), []);
@@ -219,5 +238,6 @@ export function useBoard() {
     restore,
     exportAll,
     importNotes,
+    setUrgency,
   };
 }

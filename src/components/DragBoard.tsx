@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Animated, PanResponder, View } from 'react-native';
+import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
 
 /** What a measured view is, in this version of React Native. */
 type Measurable = ComponentRef<typeof View>;
@@ -16,6 +16,9 @@ type Measurable = ComponentRef<typeof View>;
 import { dropTarget, isNoOp, type Drop, type NoteRect, type SectionRect } from '../board/drag';
 import type { Note, Section } from '../db/schema';
 import { feel } from '../feel/haptics';
+import { space } from '../theme/tokens';
+import { type } from '../theme/typography';
+import { useTheme } from '../theme/useTheme';
 
 import { NoteCard } from './NoteCard';
 
@@ -60,11 +63,14 @@ function measure(view: Measurable | null): Promise<{ y: number; h: number } | nu
 
 export function DragProvider({
   children,
+  enabled = true,
   canDrop,
   onDrop,
   onRefused,
 }: {
   children: ReactNode;
+  /** False while the board is filtered, when an index would mean nothing. */
+  enabled?: boolean;
   /** The Now limit lives above this component; drag just asks. */
   canDrop: (to: Section, from: Section) => boolean;
   onDrop: (noteId: string, to: Section, index: number) => void;
@@ -100,6 +106,7 @@ export function DragProvider({
 
   const begin = useCallback(
     (note: Note, index: number) => {
+      if (!enabled) return;
       from.current = { section: note.section, index };
       setDraggingId(note.id);
       setTarget(null);
@@ -127,7 +134,7 @@ export function DragProvider({
         };
       })();
     },
-    [notes, sections]
+    [enabled, notes, sections]
   );
 
   const move = useCallback(
@@ -204,10 +211,25 @@ export function useDrag(): DragApi {
   return ctx;
 }
 
+/** How far sideways before a swipe counts as meant. */
+const SWIPE_ARMED = 88;
+const SWIPE_MAX = 150;
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
 /**
- * A note you can pick up. Holding it for half a second lifts it; after that
- * the pan responder takes the gesture off the scroll view and the note
- * follows your finger until you let go.
+ * A note you can pick up, or swipe.
+ *
+ * Three gestures share one view, and which one you get is decided by how you
+ * start:
+ *
+ *  - a tap opens the note
+ *  - press and hold, then move, and you are carrying it
+ *  - move sideways straight away and you are swiping it
+ *
+ * Everything else — a plain vertical drag — is left alone so the board
+ * scrolls normally. That is the whole trick: the pan responder only claims
+ * the gesture once it is sure, so scrolling never feels sticky.
  */
 export function DraggableNote({
   note,
@@ -215,13 +237,16 @@ export function DraggableNote({
   fade,
   onPress,
   onComplete,
+  onDelete,
 }: {
   note: Note;
   index: number;
   fade?: number;
   onPress: (note: Note) => void;
   onComplete: (note: Note) => void;
+  onDelete: (note: Note) => void;
 }) {
+  const t = useTheme();
   const drag = useDrag();
   const view = useRef<Measurable | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
@@ -232,81 +257,162 @@ export function DraggableNote({
   // read the latest api through a ref and are created exactly once.
   const latest = useRef(drag);
   latest.current = drag;
+  const act = useRef({ onPress, onDelete });
+  act.current = { onPress, onDelete };
 
   const lifted = useRef(false);
   const moved = useRef(false);
+  const mode = useRef<'drag' | 'swipe' | null>(null);
 
   const dragging = drag.draggingId === note.id;
 
   const responder = useMemo(
     () =>
       PanResponder.create({
-        // Only once the note has been held. Until then the scroll view keeps
-        // the gesture, so the board scrolls normally.
-        onMoveShouldSetPanResponder: () => lifted.current,
+        onMoveShouldSetPanResponder: (_e, g) => {
+          if (lifted.current) return true;
+          // Decisively sideways, or the scroll view keeps it.
+          return Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.6;
+        },
+        onPanResponderGrant: () => {
+          mode.current = lifted.current ? 'drag' : 'swipe';
+        },
         onPanResponderMove: (e, g) => {
           moved.current = true;
-          // Sideways movement is damped: the board is a column, so a drag is
-          // really only ever up or down, but a little give feels alive.
-          pan.setValue({ x: g.dx * 0.25, y: g.dy });
-          latest.current.move(e.nativeEvent.pageY);
+          if (mode.current === 'drag') {
+            // Sideways movement is damped: the board is a column, so a drag
+            // is really only ever up or down, but a little give feels alive.
+            pan.setValue({ x: g.dx * 0.25, y: g.dy });
+            latest.current.move(e.nativeEvent.pageY);
+          } else {
+            pan.setValue({ x: clamp(g.dx, -SWIPE_MAX, SWIPE_MAX), y: 0 });
+          }
         },
-        onPanResponderRelease: () => {
+        onPanResponderRelease: (_e, g) => {
+          const was = mode.current;
           lifted.current = false;
           moved.current = false;
-          pan.setValue({ x: 0, y: 0 });
-          latest.current.end();
+          mode.current = null;
+
+          if (was === 'drag') {
+            pan.setValue({ x: 0, y: 0 });
+            latest.current.end();
+            return;
+          }
+
+          const settle = () =>
+            Animated.spring(pan, {
+              toValue: { x: 0, y: 0 },
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+
+          if (g.dx >= SWIPE_ARMED) {
+            feel.added();
+            settle();
+            act.current.onPress(note);
+          } else if (g.dx <= -SWIPE_ARMED) {
+            feel.refused();
+            // It leaves the way it was pushed, then the board catches up.
+            Animated.timing(pan, {
+              toValue: { x: -600, y: 0 },
+              duration: 180,
+              useNativeDriver: true,
+            }).start(() => {
+              act.current.onDelete(note);
+              pan.setValue({ x: 0, y: 0 });
+            });
+          } else {
+            settle();
+          }
         },
         onPanResponderTerminate: () => {
+          const was = mode.current;
           lifted.current = false;
           moved.current = false;
+          mode.current = null;
           pan.setValue({ x: 0, y: 0 });
-          latest.current.cancel();
+          if (was === 'drag') latest.current.cancel();
         },
       }),
-    [pan]
+    [note, pan]
   );
 
+  // The two actions waiting behind the note, each fading up as you reach it.
+  const reveal = (from: number, to: number) =>
+    pan.x.interpolate({
+      inputRange: from < to ? [from, to] : [to, from],
+      outputRange: from < to ? [0, 1] : [1, 0],
+      extrapolate: 'clamp',
+    });
+
   return (
-    <Animated.View
-      ref={(v) => {
-        // Animated.View forwards its ref to the underlying view, which is
-        // what measureInWindow needs.
-        view.current = v as unknown as Measurable | null;
-        drag.registerNote(note.id, note.section, view.current);
-      }}
-      {...responder.panHandlers}
-      style={[
-        {
-          transform: [
-            { translateX: pan.x },
-            { translateY: pan.y },
-            { scale: dragging ? 1.03 : 1 },
-          ],
-        },
-        // Lift it above its neighbours so it is never clipped by the next note.
-        dragging && { zIndex: 10, elevation: 10 },
-      ]}
-    >
-      <NoteCard
-        note={note}
-        index={index}
-        fade={dragging ? 0.92 : fade}
-        onPress={onPress}
-        onComplete={onComplete}
-        onLongPress={() => {
-          lifted.current = true;
-          drag.begin(note, index);
+    <View>
+      <View style={b.behind} pointerEvents="none">
+        <Animated.View style={[b.side, { opacity: reveal(10, SWIPE_ARMED) }]}>
+          <Text style={[type.label, { color: t.c.accent }]}>Edit</Text>
+        </Animated.View>
+        <Animated.View style={[b.side, b.right, { opacity: reveal(-10, -SWIPE_ARMED) }]}>
+          <Text style={[type.label, { color: t.c.warn }]}>Drop</Text>
+        </Animated.View>
+      </View>
+
+      <Animated.View
+        ref={(v) => {
+          // Animated.View forwards its ref to the underlying view, which is
+          // what measureInWindow needs.
+          view.current = v as unknown as Measurable | null;
+          drag.registerNote(note.id, note.section, view.current);
         }}
-        onPressOut={() => {
-          // Held, then let go without moving: nothing to commit.
-          if (lifted.current && !moved.current) {
-            lifted.current = false;
-            drag.cancel();
-          }
-        }}
-        suppressPress={() => lifted.current || moved.current}
-      />
-    </Animated.View>
+        {...responder.panHandlers}
+        style={[
+          {
+            transform: [
+              { translateX: pan.x },
+              { translateY: pan.y },
+              { scale: dragging ? 1.03 : 1 },
+            ],
+          },
+          // Lift it above its neighbours so it is never clipped by the next note.
+          dragging && { zIndex: 10, elevation: 10 },
+        ]}
+      >
+        <NoteCard
+          note={note}
+          index={index}
+          fade={dragging ? 0.92 : fade}
+          onPress={onPress}
+          onComplete={onComplete}
+          onLongPress={() => {
+            lifted.current = true;
+            drag.begin(note, index);
+          }}
+          onPressOut={() => {
+            // Held, then let go without moving: nothing to commit.
+            if (lifted.current && !moved.current) {
+              lifted.current = false;
+              drag.cancel();
+            }
+          }}
+          suppressPress={() => lifted.current || moved.current}
+        />
+      </Animated.View>
+    </View>
   );
 }
+
+const b = StyleSheet.create({
+  behind: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+  },
+  side: { justifyContent: 'center' },
+  right: { alignItems: 'flex-end' },
+});

@@ -20,6 +20,7 @@ const note = (over: Partial<Note> = {}): Note => ({
   updatedAt: 1_700_000_000_000,
   completedAt: null,
   remindAt: null,
+  priority: 0,
   ...over,
 });
 
@@ -101,6 +102,21 @@ test('restoring the same file twice adds nothing the second time', () => {
   const incoming = [note({ id: 'a' }), note({ id: 'b' })];
   const after = newNotesOnly(incoming, incoming);
   assert.deepEqual(after, []);
+});
+
+test('urgency survives a round trip, and an old file without it does not fail', () => {
+  const r = round([note({ priority: 3 }), note({ id: 'n2', priority: 0 })]);
+  assert.ok(r.ok);
+  assert.deepEqual(r.notes.map((n) => n.priority), [3, 0]);
+
+  const older = parseBackup(
+    JSON.stringify({
+      version: 1,
+      notes: [{ ...note(), priority: undefined }],
+    })
+  );
+  assert.ok(older.ok);
+  assert.equal(older.notes[0].priority, 0);
 });
 
 console.log(`\n${passed} passed`);

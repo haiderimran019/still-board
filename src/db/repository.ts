@@ -3,7 +3,7 @@ import type { Db, Opener } from './driver';
 import { expoOpener } from './driver';
 import { migrate } from './migrations';
 import { between, needsRenumber, renumber, STEP } from './positions';
-import type { Note, NoteRow, Section } from './schema';
+import type { Note, NoteRow, Priority, Section } from './schema';
 import { SECTIONS, toNote } from './schema';
 
 /**
@@ -103,6 +103,7 @@ export async function create(text: string, section: Section): Promise<Note> {
     updatedAt: t,
     completedAt: null,
     remindAt: null,
+    priority: 0,
   };
   await d.runAsync(
     `INSERT INTO notes (id, text, section, position, tint, created_at, updated_at, completed_at)
@@ -110,6 +111,15 @@ export async function create(text: string, section: Section): Promise<Note> {
     [note.id, note.text, note.section, note.position, note.tint, note.createdAt, note.updatedAt]
   );
   return note;
+}
+
+export async function setPriority(noteId: string, priority: Priority): Promise<void> {
+  const d = await db();
+  await d.runAsync('UPDATE notes SET priority = ?, updated_at = ? WHERE id = ?', [
+    priority,
+    now(),
+    noteId,
+  ]);
 }
 
 /**
@@ -270,8 +280,8 @@ export async function importNotes(incoming: readonly Note[]): Promise<number> {
       ]);
       if (exists) continue;
       await d.runAsync(
-        `INSERT INTO notes (id, text, section, position, tint, created_at, updated_at, completed_at, remind_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO notes (id, text, section, position, tint, created_at, updated_at, completed_at, remind_at, priority)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           n.id,
           n.text,
@@ -285,6 +295,7 @@ export async function importNotes(incoming: readonly Note[]): Promise<number> {
           // one that already passed would be noise. The note comes back; the
           // alarm does not.
           null,
+          n.priority,
         ]
       );
       added++;

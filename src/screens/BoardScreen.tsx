@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CaptureSheet } from '../components/CaptureSheet';
 import { DragProvider, DraggableNote, useDrag } from '../components/DragBoard';
+import { MenuSheet } from '../components/MenuSheet';
 import { NoteCard } from '../components/NoteCard';
 import { NoteSheet } from '../components/NoteSheet';
 import { SomedayBox } from '../components/SomedayBox';
@@ -12,11 +13,12 @@ import { BackupSheet } from './BackupSheet';
 import { DoneScreen } from './DoneScreen';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
+import { DAY_FILTERS, filterCounts, matchesFilter, type DayFilter } from '../board/dayFilter';
 import { headerLine, somedayFade, splitSomeday } from '../board/whispers';
 import type { Notice } from '../store/useBoard';
 import { APP_NAME, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
-import { SECTIONS, type Note, type Section } from '../db/schema';
+import { SECTIONS, type Note, type Priority, type Section } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
@@ -39,6 +41,7 @@ type Props = {
   onComplete: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onRemind: (id: string, at: number | null) => Promise<void>;
+  onUrgency: (id: string, priority: Priority) => Promise<void>;
   onReorder: (id: string, section: Section, index: number) => Promise<void>;
   onRefused: (section: Section) => void;
   onRestore: (id: string) => Promise<void>;
@@ -67,6 +70,7 @@ export function BoardScreen({
   onComplete,
   onDelete,
   onRemind,
+  onUrgency,
   onReorder,
   onRefused,
   onRestore,
@@ -79,15 +83,20 @@ export function BoardScreen({
   const [opened, setOpened] = useState<Note | null>(null);
   const [showDone, setShowDone] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
-  const bySection = (s: Section) => notes.filter((n) => n.section === s);
+  const [showMenu, setShowMenu] = useState(false);
+  const [filter, setFilter] = useState<DayFilter>('all');
+  const now = new Date();
+  const counts = filterCounts(notes, now);
+  const shown = notes.filter((n) => matchesFilter(n.createdAt, now, filter));
+  const bySection = (s: Section) => shown.filter((n) => n.section === s);
 
   // The tagline is for strangers; by the second launch the user isn't one, so
   // the line under the wordmark describes the board instead.
-  const subtitle = headerLine(new Date(), nowNotes.length, notes.length);
-  const chip = todayCount > 0 ? `${todayCount} cleared today` : doneCount > 0 ? `${doneCount} done` : null;
+  const subtitle = headerLine(now, nowNotes.length, notes.length);
 
   return (
     <DragProvider
+      enabled={filter === 'all'}
       canDrop={(to) => to !== 'now' || nowNotes.length < NOW_LIMIT}
       onDrop={(id, section, index) => void onReorder(id, section, index)}
       onRefused={onRefused}
@@ -106,20 +115,18 @@ export function BoardScreen({
             <Text style={[type.wordmark, { color: t.c.ink }]}>{APP_NAME}</Text>
             <Text style={[type.caption, { color: t.c.inkSoft }]}>{subtitle}</Text>
           </View>
-          {chip && (
-            <Pressable
-              onPress={() => setShowDone(true)}
-              accessibilityRole="button"
-              accessibilityLabel={`${chip}. Open what you have finished.`}
-              hitSlop={10}
-              style={({ pressed }) => [
-                s.chip,
-                { backgroundColor: t.c.accent + '22', opacity: pressed ? 0.6 : 1 },
-              ]}
-            >
-              <Text style={[type.caption, { color: t.c.accent }]}>{chip}</Text>
-            </Pressable>
-          )}
+          <Pressable
+            onPress={() => setShowMenu(true)}
+            accessibilityRole="button"
+            accessibilityLabel="More: what you've finished, and keeping a copy"
+            hitSlop={12}
+            style={({ pressed }) => [
+              s.more,
+              { borderColor: t.c.rule, opacity: pressed ? 0.5 : 1 },
+            ]}
+          >
+            <Text style={[type.label, { color: t.c.inkSoft }]}>•••</Text>
+          </Pressable>
         </View>
 
         <Pressable
@@ -138,6 +145,50 @@ export function BoardScreen({
           </View>
         </Pressable>
 
+        {/* A lens over the board, not a second board. It resets to All on
+            every launch: a filter that persists is how someone loses half
+            their notes and blames the app. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.filters}
+          keyboardShouldPersistTaps="handled"
+        >
+          {DAY_FILTERS.map((f) => {
+            const on = f.key === filter;
+            const empty = counts[f.key] === 0 && f.key !== 'all';
+            return (
+              <Pressable
+                key={f.key}
+                onPress={() => setFilter(f.key)}
+                disabled={empty}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on, disabled: empty }}
+                accessibilityLabel={`${f.label}, ${counts[f.key]} notes`}
+                style={({ pressed }) => [
+                  s.filter,
+                  {
+                    backgroundColor: on ? t.c.accent : 'transparent',
+                    borderColor: on ? t.c.accent : t.c.rule,
+                    opacity: empty ? 0.35 : pressed ? 0.6 : 1,
+                  },
+                ]}
+              >
+                <Text style={[type.label, { color: on ? t.c.board : t.c.inkSoft }]}>
+                  {f.label}
+                  {f.key !== 'all' && counts[f.key] > 0 ? ` ${counts[f.key]}` : ''}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {filter !== 'all' && (
+          <Text style={[type.caption, s.lensNote, { color: t.c.inkFaint }]}>
+            Showing part of the board, so notes can't be reordered. Tap All to put it back.
+          </Text>
+        )}
+
         {SECTIONS.map((section, sectionIndex) => {
           const items = bySection(section);
           return (
@@ -154,20 +205,14 @@ export function BoardScreen({
                   onToggleBox={() => setBoxOpen((v) => !v)}
                   onOpen={setOpened}
                   onComplete={(n) => onComplete(n.id)}
+                  onDrop={(n) => void onDelete(n.id)}
                 />
               </View>
             </Fragment>
           );
         })}
 
-        <Pressable
-          onPress={() => setShowBackup(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Keep a copy of this board"
-          style={({ pressed }) => [s.footTap, { opacity: pressed ? 0.5 : 1 }]}
-        >
-          <Text style={[type.caption, s.foot, { color: t.c.inkFaint }]}>Keep a copy</Text>
-        </Pressable>
+
       </ScrollView>
 
       {notice && (
@@ -197,6 +242,16 @@ export function BoardScreen({
         onComplete={onComplete}
         onDelete={onDelete}
         onRemind={onRemind}
+        onUrgency={onUrgency}
+      />
+
+      <MenuSheet
+        visible={showMenu}
+        todayCount={todayCount}
+        doneCount={doneCount}
+        onClose={() => setShowMenu(false)}
+        onDone={() => setShowDone(true)}
+        onBackup={() => setShowBackup(true)}
       />
 
       <BackupSheet
@@ -236,6 +291,7 @@ function SectionNotes({
   onToggleBox,
   onOpen,
   onComplete,
+  onDrop,
 }: {
   section: Section;
   items: Note[];
@@ -243,6 +299,7 @@ function SectionNotes({
   onToggleBox: () => void;
   onOpen: (note: Note) => void;
   onComplete: (note: Note) => void;
+  onDrop: (note: Note) => void;
 }) {
   const t = useTheme();
   const drag = useDrag();
@@ -289,6 +346,7 @@ function SectionNotes({
             fade={section === 'someday' ? somedayFade(note.createdAt, now) : undefined}
             onPress={onOpen}
             onComplete={onComplete}
+            onDelete={onDrop}
           />
         </Fragment>
       ))}
@@ -316,7 +374,22 @@ const s = StyleSheet.create({
     paddingTop: space.md,
   },
   headText: { flex: 1 },
-  chip: { borderRadius: radius.pill, paddingHorizontal: 12, minHeight: 32, justifyContent: 'center' },
+  more: {
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    minHeight: 38,
+    justifyContent: 'center',
+  },
+  filters: { gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.lg },
+  filter: {
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  lensNote: { paddingHorizontal: space.lg, paddingBottom: space.lg },
   composer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,8 +412,7 @@ const s = StyleSheet.create({
   notesEmpty: { minHeight: 64, justifyContent: 'center' },
   drop: { height: 3, borderRadius: 2, marginVertical: 1 },
   empty: { fontStyle: 'italic' },
-  foot: { textAlign: 'center', paddingHorizontal: space.lg, textDecorationLine: 'underline' },
-  footTap: { minHeight: MIN_TAP, justifyContent: 'center' },
+
   noticeText: { flex: 1 },
   notice: {
     flexDirection: 'row',

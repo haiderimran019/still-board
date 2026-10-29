@@ -70,8 +70,20 @@ try {
     );
   });
 
-  await test('the new column arrives empty rather than guessed at', async () => {
-    for (const n of await repo.listBoard()) assert.equal(n.remindAt, null);
+  await test('the new columns arrive empty rather than guessed at', async () => {
+    // A phone two versions behind catches up in one launch: v1 -> v2 -> v3.
+    for (const n of await repo.listBoard()) {
+      assert.equal(n.remindAt, null, 'no reminder invented');
+      assert.equal(n.priority, 0, 'no urgency invented');
+    }
+  });
+
+  await test('the upgraded board takes urgency like a fresh one', async () => {
+    const note = (await repo.listBoard())[0];
+    await repo.setPriority(note.id, 3);
+    repo.__useDriver(driver);
+    await repo.init();
+    assert.equal((await repo.listBoard()).find((n) => n.id === note.id)?.priority, 3);
   });
 
   await test('the database records its new version', async () => {

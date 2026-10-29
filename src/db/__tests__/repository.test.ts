@@ -249,6 +249,7 @@ try {
         updatedAt: 1,
         completedAt: null,
         remindAt: Date.now() + 1000,
+        priority: 2,
       },
     ]);
     assert.equal(added, 1);

@@ -49,6 +49,7 @@ export default function App() {
     restore,
     exportAll,
     importNotes,
+    setUrgency,
   } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
@@ -71,6 +72,7 @@ export default function App() {
         onComplete={complete}
         onDelete={remove}
         onRemind={remind}
+        onUrgency={setUrgency}
         onReorder={reorder}
         onRefused={refuse}
         onRestore={restore}

@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { reminderLabel } from '../board/schedule';
+import { URGENCY, urgencyColour } from '../board/urgency';
 import { ageWhisper } from '../board/whispers';
 import type { Note } from '../db/schema';
 import { feel } from '../feel/haptics';
@@ -58,6 +59,7 @@ function NoteCardBase({
   // that is what they are for, and marking their age would be nagging.
   const age = note.section === 'now' ? ageWhisper(note.createdAt, Date.now()) : null;
   const due = note.remindAt !== null ? reminderLabel(note.remindAt, new Date()) : null;
+  const urgent = urgencyColour(note.priority, t.c.urgency);
 
   const [finishing, setFinishing] = useState(false);
 
@@ -133,6 +135,10 @@ function NoteCardBase({
         },
       ]}
     >
+      {/* Urgency as a stripe down the edge. The colour is never the only
+          signal — the word is in the label below and in the sheet. */}
+      {urgent && <View style={[s.stripe, { backgroundColor: urgent }]} />}
+
       {/* The one action worth a direct tap. Its hit area is padded out to
           the 48dp floor without the circle itself having to be that big. */}
       <Pressable
@@ -206,6 +212,7 @@ function NoteCardBase({
         // to track which section heading came last.
         accessibilityLabel={
           `${note.text}. In ${SECTION_COPY[note.section].name}.` +
+          (note.priority > 0 ? ` ${URGENCY[note.priority].label}.` : '') +
           (due ? ` Reminder ${due}.` : '') +
           (age ? ` Written ${age}.` : '')
         }
@@ -230,6 +237,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 15,
     minHeight: MIN_TAP,
   },
+  stripe: { width: 4, borderRadius: 2, alignSelf: 'stretch', marginLeft: -4 },
   checkTap: { paddingRight: 2, paddingTop: 1 },
   check: {
     width: 20,
