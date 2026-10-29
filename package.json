@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/caveat": "^0.4.2",
     "@expo-google-fonts/gabarito": "^0.4.2",
+    "@expo-google-fonts/mako": "^0.4.0",
     "expo": "~58.0.21",
     "expo-font": "~58.0.11",
     "expo-haptics": "~58.0.7",
@@ -24,7 +25,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "test": "node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/positions.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/whispers.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/schedule.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/drag.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/migration.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/repository.test.ts",
+    "test": "node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/positions.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/whispers.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/schedule.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/drag.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/done.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/migration.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/repository.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "private": true

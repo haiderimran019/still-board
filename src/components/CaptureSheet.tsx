@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 
-import { NOW_LIMIT } from '../config';
+import { NOTE_FACE, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { feel } from '../feel/haptics';
@@ -301,7 +301,7 @@ const s = StyleSheet.create({
     paddingBottom: space.xl,
   },
   grab: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: space.lg },
-  input: { minHeight: 72, maxHeight: 160, textAlignVertical: 'top', fontSize: 21, lineHeight: 28 },
+  input: { minHeight: 72, maxHeight: 160, textAlignVertical: 'top', fontSize: NOTE_FACE === 'mako' ? 18 : 21, lineHeight: 28 },
   pills: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   pill: {
     borderWidth: 1,

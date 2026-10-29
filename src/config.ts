@@ -16,6 +16,13 @@ export const TAGLINE = 'Your life, on one calm board.';
  */
 export const NOW_LIMIT = 7;
 
+/**
+ * The face your own writing is set in. Flip this one word to change the whole
+ * feel of the board — 'mako' is a narrow, quiet, modern sans; 'caveat' is a
+ * pen hand. Both are loaded, so switching costs nothing but this line.
+ */
+export const NOTE_FACE: 'mako' | 'caveat' = 'mako';
+
 /** How far back the Done list reaches before it stops piling up. */
 export const DONE_WINDOW_DAYS = 30;
 

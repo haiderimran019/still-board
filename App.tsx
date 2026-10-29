@@ -6,6 +6,7 @@ import { Gabarito_500Medium } from '@expo-google-fonts/gabarito/500Medium';
 import { Gabarito_600SemiBold } from '@expo-google-fonts/gabarito/600SemiBold';
 import { Gabarito_700Bold } from '@expo-google-fonts/gabarito/700Bold';
 import { Caveat_600SemiBold } from '@expo-google-fonts/caveat/600SemiBold';
+import { Mako_400Regular } from '@expo-google-fonts/mako/400Regular';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -24,15 +25,18 @@ export default function App() {
     Gabarito_600SemiBold,
     Gabarito_700Bold,
     Caveat_600SemiBold,
+    Mako_400Regular,
   });
 
   const {
     notes,
     nowNotes,
     doneCount,
+    done,
     todayCount,
     bootError,
     notice,
+    hush,
     create,
     swapIntoNow,
     edit,
@@ -42,6 +46,7 @@ export default function App() {
     remind,
     reorder,
     refuse,
+    restore,
   } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
@@ -53,8 +58,10 @@ export default function App() {
         notes={notes}
         nowNotes={nowNotes}
         doneCount={doneCount}
+        done={done}
         todayCount={todayCount}
         notice={notice}
+        onHush={hush}
         onCreate={create}
         onSwap={swapIntoNow}
         onEdit={edit}
@@ -64,6 +71,7 @@ export default function App() {
         onRemind={remind}
         onReorder={reorder}
         onRefused={refuse}
+        onRestore={restore}
       />
     </SafeAreaProvider>
   );

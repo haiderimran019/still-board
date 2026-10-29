@@ -8,9 +8,11 @@ import { DragProvider, DraggableNote, useDrag } from '../components/DragBoard';
 import { NoteCard } from '../components/NoteCard';
 import { NoteSheet } from '../components/NoteSheet';
 import { SomedayBox } from '../components/SomedayBox';
+import { DoneScreen } from './DoneScreen';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
 import { headerLine, somedayFade, splitSomeday } from '../board/whispers';
+import type { Notice } from '../store/useBoard';
 import { APP_NAME, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
@@ -24,9 +26,11 @@ type Props = {
   notes: Note[];
   nowNotes: Note[];
   doneCount: number;
+  done: Note[];
   /** Cleared since midnight — today only, because a running total is a score. */
   todayCount: number;
-  notice: string | null;
+  notice: Notice | null;
+  onHush: () => void;
   onCreate: (text: string, section: Section) => Promise<void>;
   onSwap: (text: string, outgoingId: string, how: FreeUp) => Promise<void>;
   onEdit: (id: string, text: string) => Promise<void>;
@@ -36,6 +40,7 @@ type Props = {
   onRemind: (id: string, at: number | null) => Promise<void>;
   onReorder: (id: string, section: Section, index: number) => Promise<void>;
   onRefused: (section: Section) => void;
+  onRestore: (id: string) => Promise<void>;
 };
 
 /**
@@ -48,8 +53,10 @@ export function BoardScreen({
   notes,
   nowNotes,
   doneCount,
+  done,
   todayCount,
   notice,
+  onHush,
   onCreate,
   onSwap,
   onEdit,
@@ -59,11 +66,13 @@ export function BoardScreen({
   onRemind,
   onReorder,
   onRefused,
+  onRestore,
 }: Props) {
   const t = useTheme();
   const [capturing, setCapturing] = useState(false);
   const [boxOpen, setBoxOpen] = useState(false);
   const [opened, setOpened] = useState<Note | null>(null);
+  const [showDone, setShowDone] = useState(false);
   const bySection = (s: Section) => notes.filter((n) => n.section === s);
 
   // The tagline is for strangers; by the second launch the user isn't one, so
@@ -92,9 +101,18 @@ export function BoardScreen({
             <Text style={[type.caption, { color: t.c.inkSoft }]}>{subtitle}</Text>
           </View>
           {chip && (
-            <View style={[s.chip, { backgroundColor: t.c.accent + '22' }]}>
+            <Pressable
+              onPress={() => setShowDone(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`${chip}. Open what you have finished.`}
+              hitSlop={10}
+              style={({ pressed }) => [
+                s.chip,
+                { backgroundColor: t.c.accent + '22', opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
               <Text style={[type.caption, { color: t.c.accent }]}>{chip}</Text>
-            </View>
+            </Pressable>
           )}
         </View>
 
@@ -142,8 +160,21 @@ export function BoardScreen({
       </ScrollView>
 
       {notice && (
-        <View style={[s.notice, { backgroundColor: t.c.ink }]} pointerEvents="none">
-          <Text style={[type.caption, { color: t.c.board }]}>{notice}</Text>
+        <View style={[s.notice, { backgroundColor: t.c.ink }]}>
+          <Text style={[type.caption, s.noticeText, { color: t.c.board }]}>{notice.text}</Text>
+          {notice.undo && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Undo that"
+              hitSlop={12}
+              onPress={() => {
+                onHush();
+                void notice.undo?.();
+              }}
+            >
+              <Text style={[type.bodyStrong, { color: t.c.notes[0] }]}>Undo</Text>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -155,6 +186,13 @@ export function BoardScreen({
         onComplete={onComplete}
         onDelete={onDelete}
         onRemind={onRemind}
+      />
+
+      <DoneScreen
+        visible={showDone}
+        notes={done}
+        onClose={() => setShowDone(false)}
+        onRestore={onRestore}
       />
 
       <CaptureSheet
@@ -260,7 +298,7 @@ const s = StyleSheet.create({
     paddingTop: space.md,
   },
   headText: { flex: 1 },
-  chip: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  chip: { borderRadius: radius.pill, paddingHorizontal: 12, minHeight: 32, justifyContent: 'center' },
   composer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,7 +322,11 @@ const s = StyleSheet.create({
   drop: { height: 3, borderRadius: 2, marginVertical: 1 },
   empty: { fontStyle: 'italic' },
   foot: { textAlign: 'center', paddingHorizontal: space.lg },
+  noticeText: { flex: 1 },
   notice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.lg,
     position: 'absolute',
     left: space.lg,
     right: space.lg,

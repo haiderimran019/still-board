@@ -4,6 +4,9 @@ import { clearedToday } from '../board/whispers';
 import * as repo from '../db/repository';
 import type { FreeUp } from '../db/repository';
 import type { Note, Section } from '../db/schema';
+
+/** A line the board says, and optionally the way to take it back. */
+export type Notice = { text: string; undo?: () => Promise<void> };
 import { feel } from '../feel/haptics';
 import * as reminders from '../feel/reminders';
 
@@ -19,14 +22,22 @@ export function useBoard() {
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [done, setDone] = useState<Note[]>([]);
   const [bootError, setBootError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** One line, briefly, for the few things the board has to say out loud. */
-  const say = useCallback((message: string) => {
+  /**
+   * One line, briefly, for the few things the board has to say out loud —
+   * and, where something was taken away, the way to get it back.
+   */
+  const say = useCallback((text: string, undo?: () => Promise<void>) => {
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
-    setNotice(message);
-    noticeTimer.current = setTimeout(() => setNotice(null), 4000);
+    setNotice({ text, undo });
+    noticeTimer.current = setTimeout(() => setNotice(null), undo ? 6000 : 4000);
+  }, []);
+
+  const hush = useCallback(() => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    setNotice(null);
   }, []);
 
   useEffect(() => () => {
@@ -86,23 +97,34 @@ export function useBoard() {
     [refresh]
   );
 
+  /**
+   * The note card plays the finishing animation and its own haptic, then
+   * calls this. Nothing is destroyed — the note keeps its place in the table
+   * with a completed_at, so Undo is one write and costs nothing.
+   */
   const complete = useCallback(
     async (id: string) => {
       await reminders.cancel(id);
       await repo.complete(id);
-      feel.resolved();
       await refresh();
+      say('Cleared.', async () => {
+        await repo.uncomplete(id);
+        await refresh();
+      });
     },
-    [refresh]
+    [refresh, say]
   );
 
+  /** Deleting is the one thing here that cannot be taken back, so the sheet
+   *  asks twice before it gets this far. */
   const remove = useCallback(
     async (id: string) => {
       await reminders.cancel(id);
       await repo.remove(id);
       await refresh();
+      say('Dropped.');
     },
-    [refresh]
+    [refresh, say]
   );
 
   /**
@@ -132,6 +154,15 @@ export function useBoard() {
     [notes, refresh, say]
   );
 
+  /** Back onto the board, at the end of the section it came from. */
+  const restore = useCallback(
+    async (id: string) => {
+      await repo.uncomplete(id);
+      await refresh();
+    },
+    [refresh]
+  );
+
   /** Where a drag ends up: section and position in one write. */
   const reorder = useCallback(
     async (id: string, section: Section, index: number) => {
@@ -158,10 +189,12 @@ export function useBoard() {
   return {
     notes,
     nowNotes,
+    done,
     doneCount: done.length,
     todayCount,
     bootError,
     notice,
+    hush,
     refresh,
     create,
     swapIntoNow,
@@ -172,5 +205,6 @@ export function useBoard() {
     remind,
     reorder,
     refuse,
+    restore,
   };
 }

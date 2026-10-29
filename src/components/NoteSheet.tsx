@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { reminderChoices, reminderLabel } from '../board/schedule';
+import { NOTE_FACE } from '../config';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { SECTION_COPY } from '../screens/sectionCopy';
 import { MIN_TAP, radius, space } from '../theme/tokens';
@@ -47,11 +48,14 @@ export function NoteSheet({
   const t = useTheme();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  // Deleting is the only thing on this sheet that cannot be undone.
+  const [armed, setArmed] = useState(false);
 
   useEffect(() => {
     if (note) {
       setText(note.text);
       setBusy(false);
+      setArmed(false);
     }
   }, [note]);
 
@@ -178,12 +182,16 @@ export function NoteSheet({
 
             <Pressable
               disabled={busy}
-              onPress={() => act(() => onDelete(note.id))}
+              onPress={() => (armed ? act(() => onDelete(note.id)) : setArmed(true))}
               accessibilityRole="button"
-              accessibilityLabel="Delete this note"
+              accessibilityLabel={
+                armed ? 'Tap again to delete this note for good' : 'Delete this note'
+              }
               style={({ pressed }) => [s.quiet, { opacity: pressed ? 0.5 : 1 }]}
             >
-              <Text style={[type.caption, { color: t.c.warn }]}>Drop it instead</Text>
+              <Text style={[type.caption, { color: t.c.warn }]}>
+                {armed ? 'Tap again — this one cannot be undone' : 'Drop it instead'}
+              </Text>
             </Pressable>
           </ScrollView>
         </View>
@@ -212,7 +220,7 @@ const s = StyleSheet.create({
     paddingBottom: space.xl,
   },
   grab: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: space.lg },
-  input: { minHeight: 60, fontSize: 21, lineHeight: 28, textAlignVertical: 'top' },
+  input: { minHeight: 60, fontSize: NOTE_FACE === 'mako' ? 18 : 21, lineHeight: 28, textAlignVertical: 'top' },
   block: { marginTop: space.lg },
   blockTitle: { marginBottom: space.sm },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
