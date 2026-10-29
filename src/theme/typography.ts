@@ -2,11 +2,11 @@
  * The rule: the app speaks in Gabarito, you write in your own face.
  * Note text is the only thing set in it.
  *
- * Mako is the default: narrow, light and level, it gives a note weight
- * without raising its voice. Caveat is the alternative, a real pen hand.
- * They need different sizing — Mako is a sans with a normal x-height, Caveat
- * is handwriting and reads small — so the metrics follow the choice rather
- * than being one compromise that suits neither. Set NOTE_FACE in config.ts.
+ * Shantell Sans is the default — the face the board was designed around.
+ * Each face needs its own metrics: Shantell is drawn wide and sits large,
+ * Mako is a narrow grotesque, Caveat is handwriting and reads small. So the
+ * sizing follows the choice rather than being one compromise that suits none
+ * of them. Set NOTE_FACE in config.ts.
  */
 import { NOTE_FACE } from '../config';
 
@@ -15,7 +15,12 @@ export const fonts = {
   uiMedium: 'Gabarito_500Medium',
   uiSemi: 'Gabarito_600SemiBold',
   uiBold: 'Gabarito_700Bold',
-  hand: NOTE_FACE === 'mako' ? 'Mako_400Regular' : 'Caveat_600SemiBold',
+  hand:
+    NOTE_FACE === 'shantell'
+      ? 'ShantellSans_500Medium'
+      : NOTE_FACE === 'mako'
+        ? 'Mako_400Regular'
+        : 'Caveat_600SemiBold',
 } as const;
 
 export const type = {
@@ -24,9 +29,11 @@ export const type = {
   body:      { fontFamily: fonts.ui,      fontSize: 15 },
   bodyStrong:{ fontFamily: fonts.uiSemi,  fontSize: 15 },
   note:
-    NOTE_FACE === 'mako'
-      ? { fontFamily: fonts.hand, fontSize: 16.5, lineHeight: 24, letterSpacing: 0.15 }
-      : { fontFamily: fonts.hand, fontSize: 19, lineHeight: 24, letterSpacing: 0 },
+    NOTE_FACE === 'shantell'
+      ? { fontFamily: fonts.hand, fontSize: 15.5, lineHeight: 23, letterSpacing: 0 }
+      : NOTE_FACE === 'mako'
+        ? { fontFamily: fonts.hand, fontSize: 16.5, lineHeight: 24, letterSpacing: 0.15 }
+        : { fontFamily: fonts.hand, fontSize: 19, lineHeight: 24, letterSpacing: 0 },
   label:     { fontFamily: fonts.uiMedium,fontSize: 13 },
   caption:   { fontFamily: fonts.ui,      fontSize: 12.5 },
 } as const;

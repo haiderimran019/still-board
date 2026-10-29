@@ -16,7 +16,13 @@ export const URGENCY: Record<Priority, { label: string; short: string }> = {
   3: { label: 'Urgent', short: 'Urgent' },
 };
 
-/** The stripe colour, or null when a note is carrying no urgency at all. */
+/**
+ * The urgency colour, or null when a note is carrying no urgency at all.
+ *
+ * Called twice for the same note: once against the strong palette for the
+ * note's edge, once against the washes for its whole face. Keeping it one
+ * function means the two can never disagree about which notes are coloured.
+ */
 export function urgencyColour(p: Priority, palette: readonly string[]): string | null {
   return p === 0 ? null : (palette[p - 1] ?? null);
 }

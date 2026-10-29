@@ -20,6 +20,8 @@ export type Palette = {
   noteEdge: string;
   /** Urgency 1, 2, 3 — green, amber, red. Index 0 has no colour by design. */
   urgency: [string, string, string];
+  /** The same three as a whole-note wash, quiet enough to read body text on. */
+  urgencyFill: [string, string, string];
 };
 
 export const light: Palette = {
@@ -37,6 +39,11 @@ export const light: Palette = {
   // Chosen to clear 3:1 against every one of the four note colours above,
   // which is the contrast floor for a graphic that carries meaning.
   urgency: ['#1e7a48', '#9a6a00', '#b3261e'],
+  // A whole note in a flat red would shout, and a board of shouting notes
+  // says nothing. These are washes at roughly the weight of the stationery
+  // colours, so ink stays at 7:1 and an urgent note reads as urgent without
+  // taking the room over.
+  urgencyFill: ['#d7eedd', '#ffe6b4', '#ffd5cd'],
 };
 
 /** Designed, not inverted: the same four stationery hues taken down to night. */
@@ -53,6 +60,7 @@ export const dark: Palette = {
   notes: ['#4a3f1e', '#2d4031', '#37314f', '#4a3328'],
   noteEdge: 'rgba(0,0,0,0.4)',
   urgency: ['#6fd39b', '#e8c04e', '#ff8a7a'],
+  urgencyFill: ['#1f3b2c', '#453516', '#4a2420'],
 };
 
 /** Shadows differ per theme: on cream a solid drop-edge reads as paper; on near-black it doesn't. */

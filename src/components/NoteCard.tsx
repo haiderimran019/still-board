@@ -59,7 +59,13 @@ function NoteCardBase({
   // that is what they are for, and marking their age would be nagging.
   const age = note.section === 'now' ? ageWhisper(note.createdAt, Date.now()) : null;
   const due = note.remindAt !== null ? reminderLabel(note.remindAt, new Date()) : null;
+  // Urgency takes the whole note, not a stripe down its edge: at arm's
+  // length on a board of twenty, a 4pt line is invisible and a coloured
+  // card is not. The edge keeps the stronger tone so the two read as one
+  // thing, and the word is still in the label — colour is never the only
+  // signal the note carries.
   const urgent = urgencyColour(note.priority, t.c.urgency);
+  const wash = urgencyColour(note.priority, t.c.urgencyFill);
 
   const [finishing, setFinishing] = useState(false);
 
@@ -118,8 +124,9 @@ function NoteCardBase({
         s.note,
         t.shadow,
         {
-          backgroundColor: t.c.notes[note.tint % t.c.notes.length],
-          borderColor: t.c.noteEdge,
+          backgroundColor: wash ?? t.c.notes[note.tint % t.c.notes.length],
+          borderColor: urgent ?? t.c.noteEdge,
+          borderWidth: urgent ? 1.5 : 1,
           opacity: Animated.multiply(
             enter,
             leave.interpolate({ inputRange: [0, 1], outputRange: [fade, 0] })
@@ -135,10 +142,6 @@ function NoteCardBase({
         },
       ]}
     >
-      {/* Urgency as a stripe down the edge. The colour is never the only
-          signal — the word is in the label below and in the sheet. */}
-      {urgent && <View style={[s.stripe, { backgroundColor: urgent }]} />}
-
       {/* The one action worth a direct tap. Its hit area is padded out to
           the 48dp floor without the circle itself having to be that big. */}
       <Pressable
@@ -231,13 +234,11 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    borderWidth: 1,
     borderRadius: radius.note,
     paddingVertical: 14,
     paddingHorizontal: 15,
     minHeight: MIN_TAP,
   },
-  stripe: { width: 4, borderRadius: 2, alignSelf: 'stretch', marginLeft: -4 },
   checkTap: { paddingRight: 2, paddingTop: 1 },
   check: {
     width: 20,

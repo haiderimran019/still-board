@@ -10,6 +10,7 @@ import { NoteCard } from '../components/NoteCard';
 import { NoteSheet } from '../components/NoteSheet';
 import { SomedayBox } from '../components/SomedayBox';
 import { BackupSheet } from './BackupSheet';
+import { ProfileSheet } from './ProfileSheet';
 import { DoneScreen } from './DoneScreen';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
@@ -83,6 +84,7 @@ export function BoardScreen({
   const [opened, setOpened] = useState<Note | null>(null);
   const [showDone, setShowDone] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [filter, setFilter] = useState<DayFilter>('all');
   const now = new Date();
@@ -174,9 +176,12 @@ export function BoardScreen({
                   },
                 ]}
               >
+                {/* The word only. The tally was answering a question nobody
+                    asked, and four numbers across the top of a board meant
+                    to feel calm is three too many. The count still decides
+                    whether a filter is worth offering — see `empty`. */}
                 <Text style={[type.label, { color: on ? t.c.board : t.c.inkSoft }]}>
                   {f.label}
-                  {f.key !== 'all' && counts[f.key] > 0 ? ` ${counts[f.key]}` : ''}
                 </Text>
               </Pressable>
             );
@@ -252,6 +257,13 @@ export function BoardScreen({
         onClose={() => setShowMenu(false)}
         onDone={() => setShowDone(true)}
         onBackup={() => setShowBackup(true)}
+        onProfile={() => setShowProfile(true)}
+      />
+
+      <ProfileSheet
+        visible={showProfile}
+        boardCount={notes.length}
+        onClose={() => setShowProfile(false)}
       />
 
       <BackupSheet

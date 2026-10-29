@@ -5,13 +5,13 @@
  * `position` is a REAL, not an INTEGER: dropping a note between two others
  * writes one row instead of renumbering the section. See docs/10-mobile-plan.md.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS notes (
   id           TEXT    PRIMARY KEY NOT NULL,
   text         TEXT    NOT NULL,
-  section      TEXT    NOT NULL CHECK (section IN ('now','next','someday')),
+  section      TEXT    NOT NULL CHECK (section IN ('now','next','nextweek','someday')),
   position     REAL    NOT NULL,
   tint         INTEGER NOT NULL DEFAULT 0,
   created_at   INTEGER NOT NULL,
@@ -29,9 +29,17 @@ CREATE INDEX IF NOT EXISTS notes_due
 
 CREATE INDEX IF NOT EXISTS notes_done
   ON notes (completed_at DESC) WHERE completed_at IS NOT NULL;
+
+-- Settings that have to outlive a launch: which theme you picked, when the
+-- board last reached your Drive. Deliberately not a second notes table —
+-- anything that belongs to a note belongs in the row with it.
+CREATE TABLE IF NOT EXISTS prefs (
+  key   TEXT PRIMARY KEY NOT NULL,
+  value TEXT NOT NULL
+);
 `;
 
-export type Section = 'now' | 'next' | 'someday';
+export type Section = 'now' | 'next' | 'nextweek' | 'someday';
 
 /**
  * How much a note is on fire. 0 is the honest default and most notes stay
@@ -40,7 +48,7 @@ export type Section = 'now' | 'next' | 'someday';
 export const PRIORITIES = [0, 1, 2, 3] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
-export const SECTIONS: readonly Section[] = ['now', 'next', 'someday'] as const;
+export const SECTIONS: readonly Section[] = ['now', 'next', 'nextweek', 'someday'] as const;
 
 export type Note = {
   id: string;

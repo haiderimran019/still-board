@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import * as repo from '../repository.ts';
+import { SECTIONS } from '../schema.ts';
 import { fileDriver } from './nodeDriver.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'still-'));
@@ -28,35 +29,47 @@ try {
 
   await test('a first launch seeds the board', async () => {
     assert.equal(await repo.seedIfEmpty(), true);
-    assert.equal((await repo.listBoard()).length, 7);
+    assert.equal((await repo.listBoard()).length, 8);
     assert.equal(await repo.countIn('now'), 3);
   });
 
   await test('a second launch does not seed again', async () => {
     assert.equal(await repo.seedIfEmpty(), false);
-    assert.equal((await repo.listBoard()).length, 7);
+    assert.equal((await repo.listBoard()).length, 8);
   });
 
   await test('notes survive a force-quit and relaunch', async () => {
+    const before = (await repo.listBoard()).length;
     await repo.create('Written before the crash', 'next');
     await relaunch();
     const texts = (await repo.listBoard()).map((n) => n.text);
     assert.ok(texts.includes('Written before the crash'));
-    assert.equal(texts.length, 8);
+    // Counted against what was there, not a number written down here: the
+    // point is that nothing else went missing over the restart.
+    assert.equal(texts.length, before + 1);
   });
 
   await test('migrations do not run twice', async () => {
     // A second migrate() on an existing file must leave the rows alone.
+    const before = (await repo.listBoard()).length;
     await relaunch();
-    assert.equal((await repo.listBoard()).length, 8);
+    assert.equal((await repo.listBoard()).length, before);
   });
 
-  await test('the board comes back in Now, Next, Someday order', async () => {
+  await test('the board comes back in section order, not insertion order', async () => {
     const sections = (await repo.listBoard()).map((n) => n.section);
-    assert.deepEqual([...sections].sort(), sections.slice().sort());
+    // Every section's notes are contiguous, and the sections run in the
+    // order the board shows them. Written against SECTIONS rather than
+    // spelled out, so adding a fifth one cannot leave this passing by
+    // accident while the board puts it in the wrong place.
+    const seen = SECTIONS.filter((s) => sections.includes(s));
+    const firsts = seen.map((s) => sections.indexOf(s));
+    const lasts = seen.map((s) => sections.lastIndexOf(s));
     assert.equal(sections.indexOf('now'), 0);
-    assert.ok(sections.lastIndexOf('now') < sections.indexOf('next'));
-    assert.ok(sections.lastIndexOf('next') < sections.indexOf('someday'));
+    for (let i = 0; i < seen.length; i++) {
+      assert.equal(lasts[i] - firsts[i] + 1, sections.filter((s) => s === seen[i]).length);
+      if (i > 0) assert.ok(lasts[i - 1] < firsts[i], `${seen[i - 1]} comes before ${seen[i]}`);
+    }
   });
 
   await test('editing a note persists', async () => {
@@ -105,8 +118,18 @@ try {
   await test('Done is bounded by its window', async () => {
     const note = (await repo.listBoard())[0];
     await repo.complete(note.id);
-    assert.equal((await repo.listDone(30)).length, 1);
-    assert.equal((await repo.listDone(0)).length, 1, 'completed just now, so still inside 0 days');
+    assert.equal((await repo.listDone(30)).length, 1, 'just cleared, so in the last month');
+
+    // Backdated by hand rather than asked for with a window of zero days.
+    // "Cleared less than nothing ago" is a race against the clock between
+    // the write and the read, not a boundary worth asserting.
+    const d = await driver(file);
+    await d.runAsync('UPDATE notes SET completed_at = ? WHERE id = ?', [
+      Date.now() - 31 * 86_400_000,
+      note.id,
+    ]);
+    assert.equal((await repo.listDone(30)).length, 0, 'past the window, so out of Done');
+    assert.equal((await repo.listDone(60)).length, 1, 'and back inside a wider one');
   });
 
   await test('delete is permanent', async () => {

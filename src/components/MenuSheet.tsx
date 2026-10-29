@@ -2,14 +2,16 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
-import { useTheme } from '../theme/useTheme';
+import { useAccount } from '../auth/account';
+import { THEME_MODES, useTheme, useThemeMode } from '../theme/useTheme';
 
 /**
- * The two things that aren't the board.
+ * Everything that isn't the board.
  *
- * They live behind one quiet control rather than on the board itself —
- * finishing notes and backing up are things you do occasionally, and putting
- * them in front of the notes every single day was clutter.
+ * It lives behind one quiet control rather than on the board itself —
+ * finishing notes, backing up and choosing a theme are things you do
+ * occasionally, and putting them in front of the notes every single day was
+ * clutter. Nothing here moves anything on the board.
  */
 export function MenuSheet({
   visible,
@@ -18,6 +20,7 @@ export function MenuSheet({
   onClose,
   onDone,
   onBackup,
+  onProfile,
 }: {
   visible: boolean;
   todayCount: number;
@@ -25,8 +28,11 @@ export function MenuSheet({
   onClose: () => void;
   onDone: () => void;
   onBackup: () => void;
+  onProfile: () => void;
 }) {
   const t = useTheme();
+  const { mode, setMode } = useThemeMode();
+  const a = useAccount();
 
   const Row = ({
     label,
@@ -72,6 +78,52 @@ export function MenuSheet({
             onPress={onDone}
           />
           <Row label="Your board, elsewhere" hint="Move it to another phone, or keep a copy" onPress={onBackup} />
+          <Row
+            label="You"
+            hint={
+              a.account
+                ? a.account.email
+                : a.available
+                  ? 'Sign in and your board follows you'
+                  : 'This board lives on this phone'
+            }
+            onPress={onProfile}
+          />
+
+          {/* The theme. Three states, not a switch: "Auto" is a real answer
+              and the commonest one, and a two-position switch cannot say it.
+              Changing it does not close the menu — you want to see it land. */}
+          <View style={[s.segment, { borderColor: t.c.rule, backgroundColor: t.c.board }]}>
+            <Text style={[type.bodyStrong, s.segmentLabel, { color: t.c.ink }]}>Look</Text>
+            <View style={s.segmentTrack}>
+              {THEME_MODES.map((m) => {
+                const on = m.key === mode;
+                return (
+                  <Pressable
+                    key={m.key}
+                    onPress={() => setMode(m.key)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: on }}
+                    accessibilityLabel={
+                      m.key === 'system' ? 'Follow the phone' : `Always ${m.label.toLowerCase()}`
+                    }
+                    style={({ pressed }) => [
+                      s.segmentOption,
+                      {
+                        backgroundColor: on ? t.c.accent : 'transparent',
+                        borderColor: on ? t.c.accent : t.c.rule,
+                        opacity: pressed ? 0.7 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={[type.label, { color: on ? t.c.board : t.c.inkSoft }]}>
+                      {m.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         </View>
       </View>
     </Modal>
@@ -107,4 +159,21 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   hint: { marginTop: 2 },
+  segment: {
+    borderWidth: 1,
+    borderRadius: radius.card,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
+    gap: space.sm,
+  },
+  segmentLabel: { marginBottom: 2 },
+  segmentTrack: { flexDirection: 'row', gap: space.sm },
+  segmentOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: radius.card - 4,
+    minHeight: MIN_TAP - 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

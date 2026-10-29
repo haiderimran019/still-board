@@ -53,7 +53,7 @@ export async function listBoard(): Promise<Note[]> {
   const rows = await d.getAllAsync<NoteRow>(
     `SELECT * FROM notes
      WHERE completed_at IS NULL
-     ORDER BY CASE section WHEN 'now' THEN 0 WHEN 'next' THEN 1 ELSE 2 END, position`
+     ORDER BY CASE section WHEN 'now' THEN 0 WHEN 'next' THEN 1 WHEN 'nextweek' THEN 2 ELSE 3 END, position`
   );
   return rows.map(toNote);
 }
@@ -254,6 +254,26 @@ export async function createInNowBySwapping(
   return created as unknown as Note;
 }
 
+// ---------- settings ----------
+
+/**
+ * Small, durable choices — the theme, the last sync. Strings only: a settings
+ * store that grows types grows a schema, and this one is meant to stay dumb.
+ */
+export async function getPref(key: string): Promise<string | null> {
+  const d = await db();
+  const r = await d.getFirstAsync<{ value: string }>('SELECT value FROM prefs WHERE key = ?', [key]);
+  return r?.value ?? null;
+}
+
+export async function setPref(key: string, value: string): Promise<void> {
+  const d = await db();
+  await d.runAsync(
+    'INSERT INTO prefs (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    [key, value]
+  );
+}
+
 // ---------- backup ----------
 
 /** Every note, finished ones included — a backup of part of a board is a trap. */
@@ -312,6 +332,7 @@ const SEED: Array<[string, Section]> = [
   ['Pay hostel fee', 'now'],
   ['Update portfolio', 'next'],
   ['Book dentist appointment', 'next'],
+  ['Start the group presentation slides', 'nextweek'],
   ['Learn photography', 'someday'],
   ['Read the Kahneman book properly', 'someday'],
 ];

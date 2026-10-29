@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { googleConfigured, useGoogleAccount } from '../auth/google';
-import * as drive from '../backup/drive';
 import { backupFilename, parseBackup, toBackup } from '../backup/format';
 import * as local from '../backup/local';
 import type { Note } from '../db/schema';
@@ -12,12 +10,12 @@ import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
 
 /**
- * Keeping a copy of the board.
+ * Moving the board, and keeping a copy of it.
  *
- * Two ways, and the order on screen is deliberate. A file you hold yourself
- * needs no account, no network and no trust — it works on a bad connection
- * and it is the one most people should use. Google Drive is offered second,
- * for a copy that survives losing the phone entirely.
+ * A file you hold yourself needs no account, no network and no trust in us —
+ * it works on a bad connection, it works for someone who will never sign in
+ * to anything, and it is the one most people should use. The account does the
+ * same job without being asked, and is pointed at rather than repeated here.
  *
  * Restoring only ever adds notes that aren't here. It cannot overwrite what
  * is on this phone and it cannot delete anything, so there is no version of
@@ -148,18 +146,11 @@ export function BackupSheet({
             onPress={openFile}
           />
 
-          <Text style={[type.section, s.group, { color: t.c.ink }]}>Google Drive</Text>
-          {/* Rendered as a separate component, and only when there are client
-              IDs to use. The auth hook throws outright on a platform with no
-              ID configured, so it must not run at all until one exists. */}
-          {googleConfigured() ? (
-            <GoogleBackup busy={busy} json={json} restoreFrom={restoreFrom} run={run} Button={Button} />
-          ) : (
-            <Text style={[type.caption, s.blurb, { color: t.c.inkFaint }]}>
-              Not switched on in this build. Sending the board as a file above does the
-              same job and needs no account.
-            </Text>
-          )}
+          <Text style={[type.section, s.group, { color: t.c.ink }]}>Without the file</Text>
+          <Text style={[type.caption, s.blurb, { color: t.c.inkFaint }]}>
+            Signing in to your Google account does this on its own — your board is on
+            every phone you sign in on. It's under You, in the same menu as this.
+          </Text>
 
           {(busy || said) && (
             <View style={s.status}>
@@ -170,84 +161,6 @@ export function BackupSheet({
         </ScrollView>
       </SafeAreaView>
     </Modal>
-  );
-}
-
-/**
- * The Google half. Separated out so that `useGoogleAccount` — which throws
- * on a platform with no client ID configured — is never mounted until the
- * app actually has one.
- */
-function GoogleBackup({
-  busy,
-  json,
-  restoreFrom,
-  run,
-  Button,
-}: {
-  busy: boolean;
-  json: () => Promise<string>;
-  restoreFrom: (text: string) => Promise<string>;
-  run: (job: () => Promise<string>) => Promise<void>;
-  Button: (p: {
-    label: string;
-    hint?: string;
-    onPress: () => void;
-    disabled?: boolean;
-  }) => React.ReactElement;
-}) {
-  const t = useTheme();
-  const google = useGoogleAccount();
-
-  const toDrive = () =>
-    void run(async () => {
-      if (!google.token) return 'Sign in first.';
-      const r = await drive.upload(google.token, await json());
-      return r.ok ? 'Backed up to your Drive.' : r.reason;
-    });
-
-  const fromDrive = () =>
-    void run(async () => {
-      if (!google.token) return 'Sign in first.';
-      const r = await drive.download(google.token);
-      if (!r.ok) return r.reason;
-      if (r.value === null) return 'There is no backup in your Drive yet.';
-      return restoreFrom(r.value);
-    });
-
-  return (
-    <>
-      <Text style={[type.caption, s.blurb, { color: t.c.inkSoft }]}>
-        Kept in a private folder only this app can see. It can't read anything else in
-        your Drive.
-      </Text>
-      {google.account ? (
-        <>
-          <Text style={[type.label, s.who, { color: t.c.inkSoft }]}>
-            Signed in as {google.account.email}
-          </Text>
-          <Button label="Back up now" onPress={toDrive} />
-          <Button label="Restore from Drive" onPress={fromDrive} />
-          <Pressable
-            onPress={google.signOut}
-            accessibilityRole="button"
-            style={({ pressed }) => [s.quiet, { opacity: pressed ? 0.5 : 1 }]}
-          >
-            <Text style={[type.caption, { color: t.c.inkFaint }]}>Sign out</Text>
-          </Pressable>
-        </>
-      ) : (
-        <Button
-          label="Sign in with Google"
-          hint="Only to reach this app's own backup folder"
-          onPress={() => void google.signIn()}
-          disabled={!google.ready || google.busy || busy}
-        />
-      )}
-      {google.error && (
-        <Text style={[type.caption, s.blurb, { color: t.c.warn }]}>{google.error}</Text>
-      )}
-    </>
   );
 }
 

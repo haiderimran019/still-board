@@ -18,10 +18,12 @@ export const NOW_LIMIT = 7;
 
 /**
  * The face your own writing is set in. Flip this one word to change the whole
- * feel of the board — 'mako' is a narrow, quiet, modern sans; 'caveat' is a
- * pen hand. Both are loaded, so switching costs nothing but this line.
+ * feel of the board. 'shantell' is the one the board was designed around —
+ * a warm, slightly drawn sans that reads as a person's handwriting without
+ * the legibility cost of a real script. 'mako' is narrow and level; 'caveat'
+ * is a pen hand. All three are loaded, so switching costs nothing but a word.
  */
-export const NOTE_FACE: 'mako' | 'caveat' = 'mako';
+export const NOTE_FACE: 'shantell' | 'mako' | 'caveat' = 'shantell';
 
 /** How far back the Done list reaches before it stops piling up. */
 export const DONE_WINDOW_DAYS = 30;
