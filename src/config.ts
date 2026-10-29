@@ -46,11 +46,16 @@ export const SOMEDAY_BOX_DAYS = 45;
  * secrets — client IDs ship inside every app that uses them — but they are
  * tied to your project, so they have to be yours.
  */
-export const GOOGLE = {
+export const GOOGLE: Record<'androidClientId' | 'iosClientId' | 'webClientId', string> = {
+  // Android needs the SHA-1 fingerprint of the signing certificate, which does
+  // not exist until the app has been built once. Filled in after the first
+  // build — see docs/12-google-signin.md.
   androidClientId: '',
-  iosClientId: '',
-  webClientId: '',
-} as const;
+  iosClientId: '208157036332-a8g5bdagd3253iscsl97kk8o7leo4h5i.apps.googleusercontent.com',
+  webClientId: '208157036332-ni3bg64lr1atghc2h5bm3sjm7otgb802.apps.googleusercontent.com',
+};
 
-export const googleConfigured = (): boolean =>
-  GOOGLE.androidClientId !== '' || GOOGLE.iosClientId !== '' || GOOGLE.webClientId !== '';
+/* Whether sign-in can actually run on the phone in your hand is a question
+   about the running platform, so it lives next to the auth code itself —
+   see auth/google.ts. This file stays free of react-native imports: the test
+   suite loads it under plain Node. */

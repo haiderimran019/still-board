@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
@@ -89,4 +90,18 @@ export function useGoogleAccount() {
   }, []);
 
   return { ready: !!request, busy, token, account, error, signIn, signOut };
+}
+
+/**
+ * Whether Google sign-in can run *on this phone*.
+ *
+ * Per-platform on purpose. `useAuthRequest` throws outright when the running
+ * platform has no client ID, so asking "is any ID set?" would let an Android
+ * phone mount a hook that cannot work. The question that matters is always
+ * about the device in your hand.
+ */
+export function googleConfigured(): boolean {
+  if (Platform.OS === 'android') return GOOGLE.androidClientId !== '';
+  if (Platform.OS === 'ios') return GOOGLE.iosClientId !== '';
+  return GOOGLE.webClientId !== '';
 }

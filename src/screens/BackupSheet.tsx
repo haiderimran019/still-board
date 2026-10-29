@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useGoogleAccount } from '../auth/google';
+import { googleConfigured, useGoogleAccount } from '../auth/google';
 import * as drive from '../backup/drive';
 import { backupFilename, parseBackup, toBackup } from '../backup/format';
 import * as local from '../backup/local';
-import { googleConfigured } from '../config';
 import type { Note } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';

@@ -1,4 +1,4 @@
-# Google sign-in — built, and what you must do to switch it on
+# Google sign-in — built, and where the setup got to
 
 Built in sprint 3. It does exactly one thing: keeps a copy of your board in
 **your own** Google Drive, in a private folder only this app can see.
@@ -15,6 +15,49 @@ Staying signed in permanently needs a refresh token, which needs a server to
 hold the client secret, which is a backend this app does not have and should
 not want. Backing up is something you choose to do, so signing in at that
 moment is not a hardship.
+
+## Status, 29 October 2026
+
+The Google Cloud side is set up. Done, in the console:
+
+| | |
+|---|---|
+| Project | `still board` — id `still-board` |
+| Google Drive API | enabled |
+| Consent screen | app name `still`, audience **External**, publishing status **Testing** |
+| Test user | the owner's own account (External apps in testing let nobody else in) |
+| Web client ID | created, in `src/config.ts` |
+| iOS client ID | created for bundle `com.haiderimran.still`, in `src/config.ts` |
+| Android client ID | **not yet** — see below |
+
+The web client also produced a client secret. It is deliberately not in this
+repo and not in the app: a secret shipped inside a mobile binary is not a
+secret, and the PKCE flow this app uses does not need one.
+
+### Why Android is still empty
+
+An Android OAuth client is tied to the SHA-1 fingerprint of the certificate
+that signs the app, and no certificate exists until the app has been built
+once. So the order is: build, read the fingerprint, then create the client.
+
+After the first build:
+
+```
+eas credentials          # pick Android, read the SHA-1
+```
+
+Create an **Android** client at
+<https://console.cloud.google.com/auth/clients/create?project=still-board>
+with package `com.haiderimran.still` and that fingerprint, then put the id in
+`GOOGLE.androidClientId`. Until then `googleConfigured()` returns false on
+Android and the app hides the Google half of the backup sheet — which is why
+it must be asked per-platform and not "is any id set?".
+
+### It still cannot run in Expo Go
+
+Google rejects `exp://` redirect URIs and Expo's hosted proxy is gone. The
+button works in a development build and nowhere else. Sending the board as a
+file is the path that works today, on any phone, with no account at all.
 
 ## Two things you have to do
 
