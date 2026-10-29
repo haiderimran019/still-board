@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>still. — Your life, on one calm board</title>
+<meta name="description" content="A calm place for everything you're carrying. Now, Next, Someday — and a hard limit of seven things today. Offline, private, no account.">
+<meta property="og:title" content="still. — Your life, on one calm board">
+<meta property="og:description" content="Now, Next, Someday. Seven things today, no more. Offline and private.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Mako&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#fdf7ec; --line:#f3e8d6; --surface:#fffdf8;
+  --ink:#3a3026; --ink-soft:#6b5f4c; --ink-faint:#7c6e58;
+  --rule:#ece0cd; --accent:#6e5220; --warn:#9c5d12;
+  --n1:#ffeba3; --n2:#cdeed6; --n3:#ded8f2; --n4:#ffd4c2;
+  --edge:rgba(58,48,38,.12);
+  --shadow:0 3px 8px rgba(58,48,38,.16);
+  --ui:'Gabarito',system-ui,-apple-system,sans-serif;
+  --hand:'Mako',system-ui,sans-serif;
+}
+:root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --board:#1a1713; --line:#241f19; --surface:#241f19;
+    --ink:#f2eae0; --ink-soft:#b5a897; --ink-faint:#8d8273;
+    --rule:#302922; --accent:#e8c892; --warn:#e8a74e;
+    --n1:#4a3f1e; --n2:#2d4031; --n3:#37314f; --n4:#4a3328;
+    --edge:rgba(0,0,0,.4);
+    --shadow:0 3px 10px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --board:#1a1713; --line:#241f19; --surface:#241f19;
+  --ink:#f2eae0; --ink-soft:#b5a897; --ink-faint:#8d8273;
+  --rule:#302922; --accent:#e8c892; --warn:#e8a74e;
+  --n1:#4a3f1e; --n2:#2d4031; --n3:#37314f; --n4:#4a3328;
+  --edge:rgba(0,0,0,.4);
+  --shadow:0 3px 10px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--board);color:var(--ink);
+  font-family:var(--ui);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{padding:28px 0 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.mark{font-weight:700;font-size:28px;letter-spacing:-1px}
+.theme{
+  font:inherit;font-size:13px;color:var(--ink-soft);background:none;
+  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;cursor:pointer;
+  min-height:40px;
+}
+.theme:hover{color:var(--ink)}
+
+.hero{padding:72px 0 56px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+h1{font-size:clamp(38px,6vw,62px);line-height:1.04;letter-spacing:-2px;margin:0 0 20px;font-weight:700}
+.lede{font-size:19px;color:var(--ink-soft);margin:0 0 32px;max-width:46ch}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:50px;
+  padding:0 24px;border-radius:14px;text-decoration:none;font-weight:600;font-size:16px;
+  border:1px solid transparent;
+}
+.btn-main{background:var(--accent);color:var(--board)}
+.btn-main:hover{filter:brightness(1.1)}
+.btn-ghost{border-color:var(--rule);color:var(--ink)}
+.btn-ghost:hover{background:var(--surface)}
+.note-small{font-size:13.5px;color:var(--ink-faint);margin-top:14px}
+
+/* the phone */
+.phone{
+  justify-self:center;width:300px;border-radius:38px;padding:12px;
+  background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow);
+}
+.screen{background:var(--board);border-radius:28px;padding:20px 16px;border:1px solid var(--rule)}
+.screen h2{font-size:26px;margin:0;letter-spacing:-1px}
+.sub{font-size:12.5px;color:var(--ink-soft);margin:2px 0 16px}
+.sec{font-size:17px;font-weight:700;letter-spacing:-.3px;margin:18px 0 2px;display:flex;justify-content:space-between;align-items:baseline}
+.sec span{font-size:12px;font-weight:500;color:var(--ink-soft)}
+.why{font-size:11.5px;color:var(--ink-faint);margin-bottom:9px}
+.gauge{display:flex;gap:3px;margin:8px 0 10px}
+.pip{height:3px;flex:1;border-radius:2px;background:var(--rule)}
+.pip.on{background:var(--accent)}
+.sticky{
+  display:flex;gap:10px;align-items:flex-start;padding:11px 12px;margin-bottom:8px;
+  border:1px solid var(--edge);border-radius:12px;box-shadow:var(--shadow);
+  font-family:var(--hand);font-size:14px;line-height:1.45;letter-spacing:.15px;
+}
+.sticky:nth-child(even){transform:rotate(.35deg)}
+.sticky:nth-child(odd){transform:rotate(-.35deg)}
+.dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-faint);flex:none;margin-top:2px}
+.pri{width:4px;align-self:stretch;border-radius:2px;flex:none}
+.y{background:var(--n1)} .g{background:var(--n2)} .l{background:var(--n3)} .p{background:var(--n4)}
+
+section{padding:64px 0;border-top:1px solid var(--line)}
+h3{font-size:clamp(26px,3.6vw,36px);letter-spacing:-1px;margin:0 0 12px}
+.section-lede{color:var(--ink-soft);max-width:60ch;margin:0 0 36px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:24px}
+.card h4{margin:0 0 8px;font-size:18px;letter-spacing:-.3px}
+.card p{margin:0;color:var(--ink-soft);font-size:15.5px}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink-faint);margin:0 0 10px}
+
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.band{border-radius:16px;padding:24px;border:1px solid var(--edge)}
+.band h4{margin:0 0 6px;font-size:19px}
+.band p{margin:0;font-size:15px;color:var(--ink)}
+.band.now{background:var(--n1)} .band.next{background:var(--n2)} .band.some{background:var(--n3)}
+
+.seven{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.big{font-size:clamp(76px,13vw,140px);line-height:.9;font-weight:700;letter-spacing:-5px;color:var(--accent)}
+
+footer{padding:52px 0 72px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:14.5px}
+footer a{color:var(--ink-soft)}
+.built{margin-top:10px}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;gap:40px;padding:48px 0 40px}
+  .grid,.three{grid-template-columns:1fr}
+  .phone{width:min(300px,100%)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="bar">
+    <div class="mark">still.</div>
+    <button class="theme" id="theme" type="button">Dark</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Your life, on one calm board.</h1>
+    <p class="lede">
+      Everything you're carrying, in three places instead of twenty.
+      <strong>Now</strong> holds seven things. That's the whole idea.
+    </p>
+    <div class="cta">
+      <a class="btn btn-main" href="#get">Get it</a>
+      <a class="btn btn-ghost" href="#why">Why seven?</a>
+    </div>
+    <p class="note-small">Android and iPhone · works offline · no account needed</p>
+  </div>
+
+  <div class="phone" aria-label="A preview of the app">
+    <div class="screen">
+      <h2>still.</h2>
+      <div class="sub">Morning · 3 in Now</div>
+
+      <div class="sec">Now <span>3 / 7</span></div>
+      <div class="why">what you're carrying today</div>
+      <div class="gauge">
+        <i class="pip on"></i><i class="pip on"></i><i class="pip on"></i>
+        <i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i>
+      </div>
+      <div class="sticky y"><span class="pri" style="background:#c0392b"></span><span class="dot"></span><span>Finish data structures assignment</span></div>
+      <div class="sticky g"><span class="pri" style="background:#b7950b"></span><span class="dot"></span><span>Reply to Ayesha about the group project</span></div>
+      <div class="sticky p"><span class="pri" style="background:#1e8449"></span><span class="dot"></span><span>Pay hostel fee</span></div>
+
+      <div class="sec">Next <span>2</span></div>
+      <div class="why">soon, but not today</div>
+      <div class="sticky l"><span class="dot"></span><span>Update portfolio</span></div>
+
+      <div class="sec">Someday</div>
+      <div class="why">no pressure to act</div>
+      <div class="sticky y" style="opacity:.55"><span class="dot"></span><span>Learn photography</span></div>
+    </div>
+  </div>
+</div>
+
+<section id="why">
+  <p class="kicker">The idea</p>
+  <h3>Three places. Not twenty.</h3>
+  <p class="section-lede">
+    Most task apps let you make infinite lists, which is how a to-do list turns into
+    a second source of guilt. This one has three sections and refuses to grow.
+  </p>
+  <div class="three">
+    <div class="band now"><h4>Now</h4><p>What you're carrying today. Seven at most — the app will stop you.</p></div>
+    <div class="band next"><h4>Next</h4><p>Soon, but not today. No count, no pressure, no red badges.</p></div>
+    <div class="band some"><h4>Someday</h4><p>Things that can wait. They fade over weeks and fold into a box.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="seven">
+    <div class="big">7</div>
+    <div style="flex:1;min-width:280px">
+      <h3 style="margin-bottom:10px">The limit is the feature</h3>
+      <p class="section-lede" style="margin-bottom:0">
+        Try to put an eighth thing in Now and the board turns around and shows you the
+        seven already there. Finish one, move one, or drop one. It won't quietly file
+        it somewhere else for you — that decision is the entire point of the app.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">What's in it</p>
+  <h3>Small, and finished.</h3>
+  <div class="grid">
+    <div class="card"><h4>Yours alone</h4><p>Every note lives on your phone, in a local database. No account, no server, nothing uploaded.</p></div>
+    <div class="card"><h4>Works with no signal</h4><p>There's nothing to load. Open it on the bus, in a basement, on campus wifi that isn't.</p></div>
+    <div class="card"><h4>Drag it around</h4><p>Hold a note and move it between sections, or swipe it to edit or clear.</p></div>
+    <div class="card"><h4>Colour by urgency</h4><p>Mark what's burning. Red, amber, green — or nothing at all, which is most things.</p></div>
+    <div class="card"><h4>Quiet reminders</h4><p>Only on Now, only three choices, no date picker. Local notifications, nothing sent anywhere.</p></div>
+    <div class="card"><h4>Keep a copy</h4><p>Save the whole board to a file, or back it up to a private folder in your own Google Drive.</p></div>
+  </div>
+</section>
+
+<section id="get">
+  <p class="kicker">Getting it</p>
+  <h3>Not in the stores yet.</h3>
+  <p class="section-lede">
+    It's being built in the open, starting with students at one university in Pakistan.
+    The code is on GitHub, and you can run it on your own phone today with Expo.
+  </p>
+  <div class="cta">
+    <a class="btn btn-main" id="repo" href="#">See the code</a>
+    <a class="btn btn-ghost" id="issues" href="#">Ask for something</a>
+  </div>
+</section>
+
+<footer>
+  <div>still. — a calm board for everything you're carrying.</div>
+  <div class="built">Built in the open. React Native, Expo, SQLite. No trackers on this page.</div>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('theme');
+  var root = document.documentElement;
+
+  function dark() {
+    var set = root.getAttribute('data-theme');
+    if (set) return set === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function paint() { btn.textContent = dark() ? 'Light' : 'Dark'; }
+
+  btn.addEventListener('click', function () {
+    root.setAttribute('data-theme', dark() ? 'light' : 'dark');
+    paint();
+    try { localStorage.setItem('theme', root.getAttribute('data-theme')); } catch (e) {}
+  });
+
+  try {
+    var saved = localStorage.getItem('theme');
+    if (saved) root.setAttribute('data-theme', saved);
+  } catch (e) {}
+  paint();
+
+  // The repo links fill themselves in from wherever this page is served,
+  // so they keep working if the project is ever renamed or moved.
+  var parts = location.hostname.split('.');
+  var user = parts[0];
+  var repo = location.pathname.split('/').filter(Boolean)[0];
+  if (user && repo && location.hostname.indexOf('github.io') > -1) {
+    var base = 'https://github.com/' + user + '/' + repo;
+    document.getElementById('repo').href = base;
+    document.getElementById('issues').href = base + '/issues/new';
+  }
+})();
+</script>
+</body>
+</html>
