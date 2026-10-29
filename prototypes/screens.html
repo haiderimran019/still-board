@@ -1,0 +1,385 @@
+<title>still. on a phone</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap">
+<style>
+  /* Gallery chrome is theme-aware; the phone screens carry their own palette so
+     the light/dark toggle shows the app's two themes, not the viewer's. */
+  :root {
+    --bg: #f4f3f0; --card: #fffefb; --fg: #211c15; --fg-soft: #5f5648;
+    --fg-faint: #857a69; --rule: #e3ddd2; --accent: #6e5220;
+    --ui: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15120f; --card: #1e1a15; --fg: #efe9e0; --fg-soft: #ac9f8d;
+      --fg-faint: #857a69; --rule: #2c2620; --accent: #e8c892; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15120f; --card: #1e1a15; --fg: #efe9e0; --fg-soft: #ac9f8d;
+    --fg-faint: #857a69; --rule: #2c2620; --accent: #e8c892; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 72px;
+  }
+  .eyebrow { font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--fg-faint); font-weight: 600; margin: 0 0 10px; }
+  h1 { font-size: clamp(27px, 4vw, 35px); font-weight: 700; letter-spacing: -.03em; margin: 0 0 12px; text-wrap: balance; }
+  .lede { max-width: 58ch; color: var(--fg-soft); margin: 0 0 8px; }
+
+  .bar { display: flex; gap: 10px; align-items: center; margin: 26px 0 34px; flex-wrap: wrap; }
+  .toggle { display: flex; gap: 3px; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 3px; }
+  .toggle button {
+    border: 0; background: transparent; cursor: pointer; color: var(--fg-soft);
+    font: 600 13px/1 var(--ui); padding: 8px 14px; border-radius: 7px;
+  }
+  .toggle button[aria-pressed="true"] { background: var(--accent); color: var(--card); }
+  .note-line { color: var(--fg-faint); font-size: 13px; }
+
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin: 42px 0 6px; }
+  .sub { color: var(--fg-soft); max-width: 58ch; margin: 0 0 22px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+
+  /* ---------- phone frame ---------- */
+  .dev { --s: .64; width: calc(375px * var(--s)); flex: 0 0 auto; }
+  @media (max-width: 440px) { .dev { --s: .78; } }
+  .slot { width: calc(375px * var(--s)); height: calc(760px * var(--s)); position: relative; }
+  .phone {
+    width: 375px; height: 760px; position: absolute; top: 0; left: 0;
+    transform: scale(var(--s)); transform-origin: top left;
+    border-radius: 42px; overflow: hidden;
+    border: 9px solid #2a2520;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 22px 44px -20px rgba(0,0,0,.55);
+  }
+  .cap { margin: 14px 0 0; font-size: 13.5px; color: var(--fg-soft); max-width: calc(375px * var(--s)); }
+  .cap b { color: var(--fg); font-weight: 600; display: block; margin-bottom: 2px; }
+
+  /* ---------- the app, at phone scale ---------- */
+  .screen {
+    --board: #fdf7ec; --line: #f3e8d6; --surface: #fffdf8;
+    --ink: #3a3026; --soft: #6b5f4c; --faint: #7c6e58; --rule2: #ece0cd;
+    --acc: #6e5220; --warn: #9c5d12;
+    --n1: #ffeba3; --n2: #cdeed6; --n3: #ded8f2; --n4: #ffd4c2;
+    --edge: rgba(58,48,38,.12);
+    --sh: 0 2px 0 rgba(58,48,38,.07), 0 6px 14px -9px rgba(58,48,38,.42);
+    width: 100%; height: 100%; position: relative; overflow: hidden;
+    background: var(--board);
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink); font-family: var(--ui); font-size: 15px;
+  }
+  .dark .screen {
+    --board: #1a1713; --line: #241f19; --surface: #241f19;
+    --ink: #f2eae0; --soft: #b5a897; --faint: #8d8273; --rule2: #302922;
+    --acc: #e8c892; --warn: #e8a74e;
+    --n1: #4a3f1e; --n2: #2d4031; --n3: #37314f; --n4: #4a3328;
+    --edge: rgba(0,0,0,.4);
+    --sh: 0 2px 0 rgba(0,0,0,.3), 0 6px 14px -9px rgba(0,0,0,.7);
+  }
+
+  .status { display: flex; justify-content: space-between; align-items: center; padding: 13px 24px 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .sig { display: flex; gap: 3px; align-items: flex-end; }
+  .sig i { display: block; width: 3px; background: var(--ink); border-radius: 1px; opacity: .85; }
+  .sig i:nth-child(1) { height: 4px; } .sig i:nth-child(2) { height: 6px; }
+  .sig i:nth-child(3) { height: 8px; } .sig i:nth-child(4) { height: 10px; opacity: .3; }
+  .batt { width: 20px; height: 10px; border: 1.4px solid var(--ink); border-radius: 3px; position: relative; opacity: .85; }
+  .batt::after { content: ""; position: absolute; inset: 1.6px; width: 60%; background: var(--ink); border-radius: 1px; }
+
+  .pad { padding: 0 18px; }
+  .app-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 18px 2px; }
+  .wordmark { font-size: 27px; font-weight: 700; letter-spacing: -.035em; margin: 0; }
+  .tagline { font-size: 12.5px; color: var(--soft); margin: 0; }
+  .chip { font-size: 11.5px; font-weight: 600; color: var(--acc); background: color-mix(in srgb, var(--acc) 13%, transparent); border-radius: 999px; padding: 3px 9px; }
+
+  .composer {
+    margin: 14px 18px 20px; background: var(--surface); border: 1px solid var(--rule2);
+    border-radius: 15px; box-shadow: var(--sh); padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .composer span { color: var(--faint); font-size: 15px; }
+  .plus { width: 30px; height: 30px; border-radius: 50%; background: var(--acc); color: var(--board); display: grid; place-items: center; font-size: 18px; font-weight: 600; }
+
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 20px; }
+  .sec-name { font-size: 21px; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+  .sec-sub { font-size: 11.5px; color: var(--faint); margin: 1px 0 0; padding: 0 20px; }
+  .sec-count { font-size: 12.5px; color: var(--soft); font-weight: 600; }
+  .sec-count.full { color: var(--warn); }
+  .gauge { display: flex; gap: 3px; padding: 9px 20px 12px; }
+  .gauge i { height: 3px; flex: 1; border-radius: 2px; background: var(--rule2); }
+  .gauge i.on { background: var(--acc); }
+  .gauge.full i.on { background: var(--warn); }
+
+  .notes { display: flex; flex-direction: column; gap: 10px; padding: 0 18px; }
+  .nt {
+    position: relative; background: var(--n1); border: 1px solid var(--edge);
+    border-radius: 12px; box-shadow: var(--sh);
+    padding: 14px 46px 14px 44px;
+    font-family: "Shantell Sans", cursive; font-weight: 500; font-size: 14.5px; line-height: 1.45;
+    transform: rotate(-.35deg);
+  }
+  .nt:nth-child(2n) { transform: rotate(.35deg); }
+  .nt:nth-child(3n) { transform: rotate(-.15deg); }
+  .nt.a { background: var(--n2); } .nt.b { background: var(--n3); } .nt.c { background: var(--n4); }
+  .nt::before {
+    content: ""; position: absolute; left: 14px; top: 15px;
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 26%, transparent);
+  }
+  .nt em { position: absolute; right: 14px; top: 16px; font-style: normal; color: var(--soft); font-family: var(--ui); font-size: 15px; }
+
+  .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(transparent, var(--board)); }
+
+  /* pager variant */
+  .pager-tabs { display: flex; gap: 22px; padding: 10px 20px 0; }
+  .pager-tabs span { font-size: 15px; font-weight: 600; color: var(--faint); }
+  .pager-tabs span.on { color: var(--ink); border-bottom: 2.5px solid var(--acc); padding-bottom: 5px; }
+  .dots { position: absolute; left: 0; right: 0; bottom: 26px; display: flex; gap: 7px; justify-content: center; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--rule2); }
+  .dots i.on { background: var(--acc); }
+
+  /* sheets */
+  .scrim { position: absolute; inset: 0; background: rgba(28,22,14,.42); }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--surface); border-radius: 22px 22px 0 0;
+    padding: 20px 18px 26px; box-shadow: 0 -10px 30px -12px rgba(0,0,0,.4);
+  }
+  .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--rule2); margin: 0 auto 16px; }
+  .sheet h3 { font-size: 21px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 6px; }
+  .sheet p { font-size: 14px; color: var(--soft); margin: 0 0 16px; }
+  .field {
+    border: 1.5px solid var(--acc); border-radius: 13px; padding: 14px 15px;
+    font-family: "Shantell Sans", cursive; font-weight: 500; font-size: 15px;
+    background: var(--board); margin-bottom: 14px;
+  }
+  .caret { display: inline-block; width: 1.6px; height: 17px; background: var(--acc); vertical-align: -3px; margin-left: 1px; }
+  .chips { display: flex; gap: 8px; margin-bottom: 4px; }
+  .chips b {
+    font: 600 13.5px/1 var(--ui); padding: 10px 15px; border-radius: 10px;
+    background: var(--board); color: var(--soft); border: 1px solid var(--rule2);
+  }
+  .chips b.on { background: var(--acc); color: var(--surface); border-color: var(--acc); }
+
+  .kb { position: absolute; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, var(--ink) 9%, var(--board)); padding: 10px 6px 26px; }
+  .kb div { display: flex; gap: 5px; justify-content: center; margin-bottom: 7px; }
+  .kb i { height: 34px; flex: 1; background: var(--surface); border-radius: 5px; box-shadow: 0 1px 0 rgba(0,0,0,.16); }
+  .kb i.w { flex: 3.2; }
+
+  .mini { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 11px; background: var(--board); border: 1px solid var(--rule2); margin-bottom: 7px; }
+  .mini span { font-family: "Shantell Sans", cursive; font-weight: 500; font-size: 13.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini b { font: 600 12px/1 var(--ui); color: var(--acc); background: color-mix(in srgb, var(--acc) 13%, transparent); padding: 6px 9px; border-radius: 7px; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; background: var(--n1); flex: 0 0 auto; }
+
+  .daygroup { font: 600 11.5px/1 var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 18px 20px 9px; }
+  .dn { display: flex; align-items: center; gap: 11px; padding: 0 20px 13px; }
+  .dn i { width: 19px; height: 19px; border-radius: 50%; background: color-mix(in srgb, var(--acc) 20%, transparent); color: var(--acc); display: grid; place-items: center; font-size: 11px; font-style: normal; flex: 0 0 auto; }
+  .dn span { font-family: "Shantell Sans", cursive; font-weight: 500; font-size: 14px; color: var(--soft); }
+
+  .ob { display: flex; flex-direction: column; height: 100%; padding: 0 28px 34px; }
+  .ob-art { flex: 1; display: grid; place-items: center; }
+  .ob-stack { display: flex; flex-direction: column; gap: 8px; width: 210px; }
+  .ob-stack i { height: 34px; border-radius: 10px; background: var(--n1); border: 1px solid var(--edge); box-shadow: var(--sh); transform: rotate(-.6deg); }
+  .ob-stack i:nth-child(2n) { background: var(--n2); transform: rotate(.6deg); }
+  .ob-stack i:nth-child(3n) { background: var(--n3); }
+  .ob-stack i.ghost { background: transparent; border: 1.5px dashed var(--warn); box-shadow: none; }
+  .ob h3 { font-size: 27px; font-weight: 700; letter-spacing: -.03em; margin: 0 0 10px; text-wrap: balance; }
+  .ob p { font-size: 15px; color: var(--soft); margin: 0 0 26px; }
+  .ob-foot { display: flex; align-items: center; justify-content: space-between; }
+  .cta { background: var(--acc); color: var(--board); font: 600 15px/1 var(--ui); padding: 15px 26px; border-radius: 13px; }
+
+  footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 24px; max-width: 62ch; }
+  footer p { color: var(--fg-soft); margin: 0 0 10px; }
+  footer strong { color: var(--fg); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Mockup · not built</p>
+  <h1>still. on a phone</h1>
+  <p class="lede">Direction B at real phone size, so you can judge the thing rather than the description. Nothing here is code yet.</p>
+
+  <div class="bar">
+    <div class="toggle" role="group" aria-label="App theme">
+      <button type="button" data-t="light" aria-pressed="true">Light</button>
+      <button type="button" data-t="dark" aria-pressed="false">Dark</button>
+    </div>
+    <span class="note-line">Switches the screens, not this page.</span>
+  </div>
+
+  <h2>The decision that costs days</h2>
+  <p class="sub">One scrolling board, or a pager you swipe between. Everything else on this page is cheap to change later; this one shapes every component.</p>
+
+  <div class="row" id="gal">
+
+    <!-- A: one scrolling board -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="app-head">
+          <div><p class="wordmark">still.</p><p class="tagline">Your life, on one calm board.</p></div>
+          <span class="chip">2 cleared</span>
+        </div>
+        <div class="composer"><span>What's on your mind?</span><span class="plus">+</span></div>
+        <div class="sec-head"><h3 class="sec-name">Now</h3><span class="sec-count">3 / 7</span></div>
+        <p class="sec-sub">what you're focusing on</p>
+        <div class="gauge"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="notes">
+          <div class="nt">Finish data structures assignment<em>⋯</em></div>
+          <div class="nt a">Reply to Ayesha about the group project<em>⋯</em></div>
+          <div class="nt b">Pay hostel fee<em>⋯</em></div>
+        </div>
+        <div class="sec-head" style="margin-top:26px"><h3 class="sec-name">Next</h3><span class="sec-count">4</span></div>
+        <p class="sec-sub">soon, but not today</p>
+        <div class="notes" style="margin-top:12px">
+          <div class="nt c">Update portfolio<em>⋯</em></div>
+          <div class="nt">Book dentist appointment<em>⋯</em></div>
+        </div>
+        <div class="fade"></div>
+      </div></div></div>
+      <p class="cap"><b>A · One scrolling board</b>Everything in one place, Someday below the fold. Matches the positioning line literally, and matches what the web prototype already does.</p>
+    </div>
+
+    <!-- B: pager -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="app-head">
+          <div><p class="wordmark">still.</p></div>
+          <span class="chip">2 cleared</span>
+        </div>
+        <div class="pager-tabs"><span class="on">Now</span><span>Next</span><span>Someday</span></div>
+        <div class="composer" style="margin-top:16px"><span>What's on your mind?</span><span class="plus">+</span></div>
+        <div class="sec-head"><h3 class="sec-name">Now</h3><span class="sec-count">3 / 7</span></div>
+        <p class="sec-sub">what you're focusing on</p>
+        <div class="gauge"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="notes">
+          <div class="nt">Finish data structures assignment<em>⋯</em></div>
+          <div class="nt a">Reply to Ayesha about the group project<em>⋯</em></div>
+          <div class="nt b">Pay hostel fee<em>⋯</em></div>
+        </div>
+        <div class="dots"><i class="on"></i><i></i><i></i></div>
+      </div></div></div>
+      <p class="cap"><b>B · Swipe between sections</b>Calmer per screen, and Someday is genuinely out of sight. But you can never see two sections at once, and moving a note means dragging it to an edge and waiting.</p>
+    </div>
+
+  </div>
+
+  <h2>The rest of the MVP</h2>
+  <p class="sub">Shown in layout A. These are cheap to change once we start.</p>
+
+  <div class="row">
+
+    <!-- capture -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="app-head"><div><p class="wordmark">still.</p></div></div>
+        <div class="notes" style="margin-top:16px;opacity:.5">
+          <div class="nt">Finish data structures assignment</div>
+          <div class="nt a">Reply to Ayesha about the group project</div>
+        </div>
+        <div class="scrim"></div>
+        <div class="sheet" style="bottom:232px">
+          <div class="grab"></div>
+          <div class="field">Email the registrar<span class="caret"></span></div>
+          <div class="chips"><b class="on">Now</b><b>Next</b><b>Someday</b></div>
+        </div>
+        <div class="kb">
+          <div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div><i class="w"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="w"></i></div>
+        </div>
+      </div></div></div>
+      <p class="cap"><b>Quick capture</b>One tap from the board. Keyboard is already up, Now is already selected, section can change after the thought is safely down.</p>
+    </div>
+
+    <!-- now is full -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="app-head"><div><p class="wordmark">still.</p></div></div>
+        <div class="sec-head"><h3 class="sec-name">Now</h3><span class="sec-count full">7 / 7</span></div>
+        <div class="gauge full"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <h3>Now is full</h3>
+          <p>Seven is the point. Pick one to finish or move, and “Email the registrar” takes its place.</p>
+          <div class="mini"><span class="swatch"></span><span>Finish data structures assignment</span><b>Move</b></div>
+          <div class="mini"><span class="swatch" style="background:var(--n2)"></span><span>Reply to Ayesha about the group…</span><b>Move</b></div>
+          <div class="mini"><span class="swatch" style="background:var(--n3)"></span><span>Pay hostel fee</span><b>Move</b></div>
+          <p style="margin:13px 0 0;text-align:center;color:var(--faint);font-size:13.5px">Or put it in Next instead</p>
+        </div>
+      </div></div></div>
+      <p class="cap"><b>Now is full</b>The refusal becomes the decision. Your brief routed this silently to Next — this is the version I argued for, so compare them honestly.</p>
+    </div>
+
+    <!-- done -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="app-head" style="padding-bottom:10px">
+          <div><p class="wordmark">Done</p><p class="tagline">the last 30 days</p></div>
+          <span class="chip">2 today</span>
+        </div>
+        <p class="daygroup">Today</p>
+        <div class="dn"><i>✓</i><span>Submit scholarship form</span></div>
+        <div class="dn"><i>✓</i><span>Call home</span></div>
+        <p class="daygroup">Yesterday</p>
+        <div class="dn"><i>✓</i><span>Print the lab report</span></div>
+        <div class="dn"><i>✓</i><span>Fix the bike chain</span></div>
+        <div class="dn"><i>✓</i><span>Return the library books</span></div>
+        <p class="daygroup">Monday</p>
+        <div class="dn"><i>✓</i><span>Registration for next semester</span></div>
+        <div class="fade"></div>
+      </div></div></div>
+      <p class="cap"><b>Done</b>Grouped by day, bounded to 30 of them. Nothing is deleted — the screen just refuses to become a second backlog.</p>
+    </div>
+
+    <!-- onboarding -->
+    <div class="dev">
+      <div class="slot"><div class="phone"><div class="screen">
+        <div class="status"><span>8:14</span><span class="sig"><i></i><i></i><i></i><i></i></span><span class="batt"></span></div>
+        <div class="ob">
+          <div class="ob-art">
+            <div class="ob-stack">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="ghost"></i>
+            </div>
+          </div>
+          <h3>Now holds seven.</h3>
+          <p>Not because seven is magic, but because a list you can't see the end of isn't a plan. When it's full, something has to leave.</p>
+          <div class="ob-foot">
+            <div class="dots" style="position:static;justify-content:flex-start"><i></i><i class="on"></i><i></i></div>
+            <span class="cta">Next</span>
+          </div>
+        </div>
+      </div></div></div>
+      <p class="cap"><b>Onboarding, 2 of 3</b>Three cards. This one has to earn the limit, because it's the rule people will push against on day one.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <p><strong>What to look at.</strong> Whether the handwriting still reads at phone size, whether the tilt looks like paper or like sloppiness, and whether the full-Now sheet feels like help or like being told off.</p>
+    <p><strong>What isn't real here.</strong> Nothing moves, nothing responds. Drag, the done animation and the keyboard are all drawings. The web board is still the place to feel how it actually behaves.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var gal = document.getElementById("gal").parentNode;
+    var btns = document.querySelectorAll(".toggle button");
+    Array.prototype.forEach.call(btns, function (b) {
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+        document.body.classList.toggle("dark", b.dataset.t === "dark");
+      });
+    });
+  })();
+</script>

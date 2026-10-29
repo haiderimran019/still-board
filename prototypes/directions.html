@@ -1,0 +1,263 @@
+<title>Directions for still.</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Gabarito:wght@400;600;700&family=Shantell+Sans:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>
+  /* Page chrome: a quiet gallery wall. Each specimen below commits to its own palette. */
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --fg: #191d26;
+    --fg-soft: #5b6476;
+    --fg-faint: #8d95a6;
+    --rule: #e0e3e9;
+    --accent: #2f4a7a;
+    --ui: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161c; --card: #1c1f27; --fg: #e9ecf2; --fg-soft: #a2aab9;
+      --fg-faint: #6d7585; --rule: #2a2f3a; --accent: #9db8e8; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161c; --card: #1c1f27; --fg: #e9ecf2; --fg-soft: #a2aab9;
+    --fg-faint: #6d7585; --rule: #2a2f3a; --accent: #9db8e8; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .wrap {
+    max-width: 1180px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 72px;
+  }
+
+  .lede { max-width: 60ch; margin-bottom: 34px; }
+  .eyebrow { font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--fg-faint); font-weight: 600; margin: 0 0 10px; }
+  h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 700; letter-spacing: -.02em; margin: 0 0 12px; text-wrap: balance; }
+  .lede p { color: var(--fg-soft); margin: 0 0 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; align-items: start; }
+  @media (max-width: 940px) { .grid { grid-template-columns: 1fr; max-width: 520px; } }
+
+  .spec { border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; background: var(--card); min-width: 0; }
+  .spec-head { padding: 16px 18px 14px; border-bottom: 1px solid var(--rule); }
+  .spec-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+  .spec-claim { font-size: 13.5px; color: var(--fg-soft); margin: 4px 0 0; }
+  .spec-body { padding: 16px 18px 18px; }
+  .spec-body dt { font-size: 11px; letter-spacing: .11em; text-transform: uppercase; color: var(--fg-faint); font-weight: 600; margin-bottom: 3px; }
+  .spec-body dd { margin: 0 0 12px; font-size: 13.5px; color: var(--fg-soft); }
+  .spec-body dd:last-child { margin-bottom: 0; }
+  .swatches { display: flex; gap: 5px; margin-top: 2px; }
+  .sw { width: 22px; height: 22px; border-radius: 5px; border: 1px solid rgba(0,0,0,.14); }
+
+  /* ---------- the specimen stage ---------- */
+  .stage { padding: 20px 18px 24px; min-height: 384px; }
+  @media (max-width: 940px) { .stage { min-height: 0; } }
+  .stage .mark { margin: 0 0 2px; }
+  .stage .tagline { margin: 0 0 20px; font-size: 12.5px; }
+  .stage .lane-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .stage .lane-name { margin: 0; }
+  .stage .lane-count { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .stage .lane-sub { font-size: 11.5px; margin: 0 0 12px; }
+  .stage .gauge { display: flex; gap: 3px; margin-bottom: 14px; }
+  .stage .pip { height: 3px; flex: 1; border-radius: 2px; }
+  .stage .notes { display: flex; flex-direction: column; gap: 10px; }
+  .stage .note { font-size: 14px; }
+
+  /* ===== A — Studio ===== */
+  .a .stage { background: #eceeea; font-family: "Archivo", sans-serif; }
+  .a .mark { font-size: 22px; font-weight: 700; letter-spacing: -.035em; color: #1e2420; }
+  .a .tagline { color: #6c746c; letter-spacing: .01em; }
+  .a .lane-name { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #1e2420; }
+  .a .lane-count { color: #6c746c; font-weight: 600; }
+  .a .lane-sub { color: #949c93; }
+  .a .pip { background: #d6dad2; }
+  .a .pip.on { background: #44543f; }
+  .a .note { background: #fbfbf9; border: 1px solid #d9ddd5; border-radius: 4px; padding: 12px 13px; color: #262c27; }
+  .a .note.t2 { background: #e4ebe0; border-color: #ccd8c6; }
+  .a .note.t3 { background: #e6e7ef; border-color: #ced0de; }
+
+  /* ===== B — Playground ===== */
+  .b .stage { background: #fffaf0; font-family: "Gabarito", sans-serif; }
+  .b .mark { font-size: 25px; font-weight: 700; letter-spacing: -.02em; color: #3d2f17; }
+  .b .tagline { color: #9a7f4e; font-weight: 500; }
+  .b .lane-name { font-size: 19px; font-weight: 700; color: #3d2f17; letter-spacing: -.01em; }
+  .b .lane-count { color: #b08a46; font-weight: 700; }
+  .b .lane-sub { color: #b4a183; }
+  .b .pip { background: #f0e3c8; }
+  .b .pip.on { background: #f3b43c; }
+  .b .note {
+    font-family: "Shantell Sans", cursive; font-weight: 500;
+    background: #ffe27a; border-radius: 13px; padding: 14px 14px 15px; color: #3b2f12;
+    box-shadow: 0 2px 0 rgba(61,47,23,.12), 0 8px 16px -8px rgba(61,47,23,.4);
+    transform: rotate(-.7deg);
+  }
+  .b .note.t2 { background: #b6e8c4; color: #16412a; transform: rotate(.8deg); }
+  .b .note.t3 { background: #ffc3ab; color: #4d2515; transform: rotate(-.3deg); }
+
+  /* ===== C — Quiet Ink ===== */
+  .c .stage { background: #13161b; font-family: "Hanken Grotesk", sans-serif; }
+  .c .mark { font-family: "Newsreader", serif; font-style: italic; font-size: 26px; font-weight: 400; color: #f2efe9; letter-spacing: -.01em; }
+  .c .tagline { color: #79808c; }
+  .c .lane-name { font-family: "Newsreader", serif; font-size: 20px; font-weight: 500; color: #f2efe9; }
+  .c .lane-count { color: #79808c; }
+  .c .lane-sub { color: #5c636e; }
+  .c .pip { background: #272c34; }
+  .c .pip.on { background: #c8b78d; }
+  .c .note {
+    background: #1b1f26; border: 1px solid #272c34; border-left: 3px solid #c8b78d;
+    border-radius: 6px; padding: 13px 14px; color: #dfe3e9;
+  }
+  .c .note.t2 { border-left-color: #7fa894; }
+  .c .note.t3 { border-left-color: #a88d9e; }
+
+  .foot { margin-top: 36px; border-top: 1px solid var(--rule); padding-top: 22px; max-width: 62ch; }
+  .foot h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; }
+  .foot p { color: var(--fg-soft); margin: 0 0 10px; }
+  .foot ul { color: var(--fg-soft); margin: 0; padding-left: 20px; }
+  .foot li { margin-bottom: 6px; }
+  strong { color: var(--fg); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <div class="lede">
+    <p class="eyebrow">Sprint 2 · Story C1</p>
+    <h1>Three directions for the board</h1>
+    <p>The same lane, the same three notes, three identities. Each commits to a
+      palette and a type pairing rather than offering a safe middle.</p>
+    <p>Pick the one that feels closest — or tell me which parts of which.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- A -->
+    <section class="spec a">
+      <div class="stage">
+        <p class="mark">still.</p>
+        <p class="tagline">Your life, on one calm board.</p>
+        <div class="lane-top">
+          <h3 class="lane-name">Now</h3>
+          <span class="lane-count">5 / 7</span>
+        </div>
+        <p class="lane-sub">what you're focusing on</p>
+        <div class="gauge" aria-hidden="true">
+          <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+          <span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+        <div class="notes">
+          <div class="note">Finish data structures assignment</div>
+          <div class="note t2">Reply to Ayesha about the group project</div>
+          <div class="note t3">Pay hostel fee</div>
+        </div>
+      </div>
+      <div class="spec-head">
+        <h2 class="spec-name">A · Studio</h2>
+        <p class="spec-claim">Precise and unhurried. Closest to the Notion end of your brief.</p>
+      </div>
+      <dl class="spec-body">
+        <dt>Type</dt>
+        <dd>Archivo throughout — one family, worked hard. Lane names set small, uppercase, widely tracked.</dd>
+        <dt>Colour</dt>
+        <dd>A cool green-grey wall; notes almost white, tinted only enough to tell apart.
+          <div class="swatches"><span class="sw" style="background:#eceeea"></span><span class="sw" style="background:#fbfbf9"></span><span class="sw" style="background:#e4ebe0"></span><span class="sw" style="background:#e6e7ef"></span><span class="sw" style="background:#44543f"></span></div>
+        </dd>
+        <dt>The risk</dt>
+        <dd>Restraint can read as plain. It lives or dies on spacing.</dd>
+      </dl>
+    </section>
+
+    <!-- B -->
+    <section class="spec b">
+      <div class="stage">
+        <p class="mark">still.</p>
+        <p class="tagline">Your life, on one calm board.</p>
+        <div class="lane-top">
+          <h3 class="lane-name">Now</h3>
+          <span class="lane-count">5 / 7</span>
+        </div>
+        <p class="lane-sub">what you're focusing on</p>
+        <div class="gauge" aria-hidden="true">
+          <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+          <span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+        <div class="notes">
+          <div class="note">Finish data structures assignment</div>
+          <div class="note t2">Reply to Ayesha about the group project</div>
+          <div class="note t3">Pay hostel fee</div>
+        </div>
+      </div>
+      <div class="spec-head">
+        <h2 class="spec-name">B · Playground</h2>
+        <p class="spec-claim">Warm and human. The Duolingo end — real sticky notes, slightly askew.</p>
+      </div>
+      <dl class="spec-body">
+        <dt>Type</dt>
+        <dd>Gabarito for the interface, Shantell Sans for note text, so what <em>you</em> wrote looks handwritten and the app's own words don't.</dd>
+        <dt>Colour</dt>
+        <dd>Cream paper, saturated stationery colours, a solid drop-edge under each note.
+          <div class="swatches"><span class="sw" style="background:#fffaf0"></span><span class="sw" style="background:#ffe27a"></span><span class="sw" style="background:#b6e8c4"></span><span class="sw" style="background:#ffc3ab"></span><span class="sw" style="background:#f3b43c"></span></div>
+        </dd>
+        <dt>The risk</dt>
+        <dd>Charm fights calm. Too much tilt and it stops feeling like relief.</dd>
+      </dl>
+    </section>
+
+    <!-- C -->
+    <section class="spec c">
+      <div class="stage">
+        <p class="mark">still.</p>
+        <p class="tagline">Your life, on one calm board.</p>
+        <div class="lane-top">
+          <h3 class="lane-name">Now</h3>
+          <span class="lane-count">5 / 7</span>
+        </div>
+        <p class="lane-sub">what you're focusing on</p>
+        <div class="gauge" aria-hidden="true">
+          <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+          <span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+        <div class="notes">
+          <div class="note">Finish data structures assignment</div>
+          <div class="note t2">Reply to Ayesha about the group project</div>
+          <div class="note t3">Pay hostel fee</div>
+        </div>
+      </div>
+      <div class="spec-head">
+        <h2 class="spec-name">C · Quiet Ink</h2>
+        <p class="spec-claim">Night-first and editorial. Premium by subtraction, not decoration.</p>
+      </div>
+      <dl class="spec-body">
+        <dt>Type</dt>
+        <dd>Newsreader italic for the wordmark and lane names, Hanken Grotesk for everything else.</dd>
+        <dt>Colour</dt>
+        <dd>Near-black ground; colour reduced to a single edge marking which lane a note came from.
+          <div class="swatches"><span class="sw" style="background:#13161b"></span><span class="sw" style="background:#1b1f26"></span><span class="sw" style="background:#c8b78d"></span><span class="sw" style="background:#7fa894"></span><span class="sw" style="background:#a88d9e"></span></div>
+        </dd>
+        <dt>The risk</dt>
+        <dd>Least sticky-note of the three. It may read as a developer tool, not a calm board.</dd>
+      </dl>
+    </section>
+
+  </div>
+
+  <div class="foot">
+    <h2>What I'd pick, and why</h2>
+    <p><strong>B, pulled back about 30%.</strong> Your audience is students on
+      Android phones, and the feeling you named is relief, not focus. Warmth
+      earns trust faster than restraint does, and the handwriting on note text
+      makes the board feel like <em>yours</em> rather than the app's.</p>
+    <p>A is the safer, more obviously "premium" answer and would age better. C
+      is the most distinctive and the furthest from the brief.</p>
+    <p>What would help most:</p>
+    <ul>
+      <li>Which of the three is closest — even if none is right.</li>
+      <li>What the first design got wrong. "Too corporate", "too childish",
+        "too busy" is enough to steer the next pass.</li>
+      <li>Whether <em>still.</em> survives as the name, since the wordmark is
+        doing real work in all three.</li>
+    </ul>
+  </div>
+</div>

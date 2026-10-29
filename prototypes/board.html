@@ -1,0 +1,781 @@
+<title>still.</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap">
+<style>
+  /* Direction B, pulled back: cream paper, stationery colours, barely-there tilt.
+     Three lanes across, stacking to one column on a phone. */
+  :root {
+    --board: #fdf7ec;
+    --board-line: #f3e8d6;
+    --surface: #fffdf8;
+    /* every text colour below clears 4.5:1 on the surface it sits on */
+    --ink: #3a3026;
+    --ink-soft: #6b5f4c;
+    --ink-faint: #7c6e58;
+    --rule: #ece0cd;
+    --accent: #6e5220;
+    --warn: #9c5d12;
+    --note-1: #ffeba3;
+    --note-2: #cdeed6;
+    --note-3: #ded8f2;
+    --note-4: #ffd4c2;
+    --note-edge: rgba(58,48,38,.12);
+    --shadow: 0 2px 0 rgba(58,48,38,.07), 0 6px 14px -9px rgba(58,48,38,.42);
+    --shadow-lift: 0 3px 0 rgba(58,48,38,.09), 0 18px 30px -14px rgba(58,48,38,.5);
+    --display: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+    --body: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+    --hand: "Shantell Sans", "Gabarito", ui-sans-serif, sans-serif;
+    --r: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --board: #1a1713; --board-line: #241f19; --surface: #241f19;
+      --ink: #f2eae0; --ink-soft: #b5a897; --ink-faint: #8d8273;
+      --rule: #302922; --accent: #e8c892; --warn: #e8a74e;
+      --note-1: #4a3f1e; --note-2: #2d4031; --note-3: #37314f; --note-4: #4a3328;
+      --note-edge: rgba(0,0,0,.4);
+      --shadow: 0 2px 0 rgba(0,0,0,.3), 0 6px 14px -9px rgba(0,0,0,.7);
+      --shadow-lift: 0 3px 0 rgba(0,0,0,.35), 0 18px 30px -14px rgba(0,0,0,.8);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --board: #1a1713; --board-line: #241f19; --surface: #241f19;
+    --ink: #f2eae0; --ink-soft: #b5a897; --ink-faint: #8d8273;
+    --rule: #302922; --accent: #e8c892; --warn: #e8a74e;
+    --note-1: #4a3f1e; --note-2: #2d4031; --note-3: #37314f; --note-4: #4a3328;
+    --note-edge: rgba(0,0,0,.4);
+    --shadow: 0 2px 0 rgba(0,0,0,.3), 0 6px 14px -9px rgba(0,0,0,.7);
+    --shadow-lift: 0 3px 0 rgba(0,0,0,.35), 0 18px 30px -14px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--board);
+    background-image:
+      linear-gradient(var(--board-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--board-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 28px 64px;
+  }
+
+  /* ---- masthead ---- */
+  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .mark { font-family: var(--display); font-size: 32px; font-weight: 700; letter-spacing: -.035em; margin: 0; }
+  .tag { color: var(--ink-soft); font-size: 14px; margin: 0; }
+  .meta { text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+  .cleared {
+    font-size: 12.5px; font-weight: 600; color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-radius: 999px; padding: 3px 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cleared:empty { display: none; }
+  @keyframes tick { 50% { transform: scale(1.12); } }
+  .cleared.bump { animation: tick .3s ease; }
+
+  /* ---- composer ---- */
+  .composer {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 26px;
+  }
+  .composer input[type=text] {
+    flex: 1 1 240px;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: 400 16px/1.4 var(--body);
+    color: var(--ink);
+    padding: 8px 6px;
+  }
+  .composer input::placeholder { color: var(--ink-faint); }
+  .composer input:focus { outline: none; }
+  .composer:focus-within { border-color: var(--accent); }
+  .lanepick { display: flex; gap: 4px; background: var(--board); border-radius: 9px; padding: 3px; }
+  .lanepick button {
+    border: 0; background: transparent; cursor: pointer;
+    font: 500 13px/1 var(--body); color: var(--ink-soft);
+    padding: 7px 11px; border-radius: 7px;
+  }
+  .lanepick button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .add {
+    border: 0; border-radius: 9px; cursor: pointer;
+    background: var(--accent); color: var(--board);
+    font: 600 14px/1 var(--body); padding: 11px 16px;
+  }
+  .add:disabled { opacity: .4; cursor: default; }
+
+  /* ---- lanes ---- */
+  /* lanes stretch to the tallest column so the whole column is a drop target */
+  .lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+  @media (max-width: 860px) { .lanes { grid-template-columns: 1fr; } }
+
+  .lane {
+    border-radius: 14px;
+    padding: 4px 4px 10px;
+    transition: background .18s ease, outline-color .18s ease;
+    outline: 2px dashed transparent;
+    outline-offset: 2px;
+    min-height: 160px;
+  }
+  .lane.over { background: color-mix(in srgb, var(--surface) 70%, transparent); outline-color: var(--accent); }
+  .lane.deny { outline-color: var(--warn); }
+
+  .lane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 6px 8px 10px; }
+  .lane-name { font-family: var(--display); font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -.02em; }
+  .lane-sub { display: block; font-family: var(--body); font-size: 12px; font-weight: 400; color: var(--ink-faint); letter-spacing: 0; margin-top: 1px; }
+  .count { font: 500 12px/1 var(--body); color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .count.full { color: var(--warn); font-weight: 600; }
+
+  .gauge { display: flex; gap: 3px; padding: 0 8px 10px; }
+  .pip { height: 3px; flex: 1; border-radius: 2px; background: var(--rule); }
+  .pip.on { background: var(--accent); }
+  .lane[data-lane="now"].at-limit .pip.on { background: var(--warn); }
+
+  .stack { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
+
+  /* ---- notes ---- */
+  .note {
+    position: relative;
+    background: var(--note-1);
+    border: 1px solid var(--note-edge);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 13px 52px 13px 42px;
+    cursor: grab;
+    touch-action: none;
+    --tilt: -.4deg;
+    transform: rotate(var(--tilt));
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+  /* just enough tilt to read as paper, not enough to feel untidy */
+  .note:nth-child(2n) { --tilt: .4deg; }
+  .note:nth-child(3n) { --tilt: -.15deg; }
+  .note:nth-child(5n) { --tilt: .2deg; }
+  .lane[data-lane="next"] .note { padding-right: 74px; }
+  .note[data-tint="1"] { background: var(--note-1); }
+  .note[data-tint="2"] { background: var(--note-2); }
+  .note[data-tint="3"] { background: var(--note-3); }
+  .note[data-tint="4"] { background: var(--note-4); }
+  .note:hover { transform: rotate(var(--tilt)) translateY(-2px); box-shadow: var(--shadow-lift); }
+  .note:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* the note being dragged collapses out of the flow; the slot stands in for it */
+  .note.dragging {
+    opacity: 0; height: 0; min-height: 0;
+    padding-block: 0; border-width: 0; overflow: hidden;
+  }
+  .slot {
+    border: 2px dashed var(--accent);
+    border-radius: var(--r);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    opacity: .55;
+  }
+  @keyframes clear-off {
+    40%  { transform: rotate(var(--tilt)) scale(1.04); opacity: 1; }
+    100% { transform: rotate(var(--tilt)) scale(.88); opacity: 0; }
+  }
+  .note.done { animation: clear-off .28s ease forwards; pointer-events: none; }
+  /* the app speaks in Gabarito; what you wrote stays in your own hand */
+  .note-text {
+    margin: 0; color: var(--ink);
+    font-family: var(--hand); font-size: 14.5px; font-weight: 500; line-height: 1.45;
+    overflow-wrap: anywhere; white-space: pre-wrap;
+    border-radius: 4px;
+  }
+  .note-text:focus { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .note-actions { position: absolute; top: 7px; right: 6px; display: flex; gap: 1px; opacity: 0; transition: opacity .14s ease; }
+  .note:hover .note-actions, .note:focus-within .note-actions { opacity: 1; }
+  @media (hover: none) { .note-actions { opacity: 1; } }
+  .icon {
+    border: 0; background: transparent; cursor: pointer; border-radius: 6px;
+    color: var(--ink-soft); font: 500 13px/1 var(--body);
+    min-width: 30px; min-height: 30px;        /* 48dp equivalent on the phone build */
+    display: grid; place-items: center;
+  }
+  .icon:hover { background: var(--note-edge); color: var(--ink); }
+  .icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* done is the one positive action, so it sits apart from the rest */
+  .check {
+    position: absolute; left: 12px; top: 13px;
+    width: 20px; height: 20px; border-radius: 50%; padding: 0;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 26%, transparent);
+    background: transparent; cursor: pointer;
+    display: grid; place-items: center;
+    color: transparent; font-size: 11px; line-height: 1;
+    transition: background .14s ease, border-color .14s ease, color .14s ease;
+  }
+  /* the circle stays small; the thing you can hit is 44px square */
+  .check::before {
+    content: ""; position: absolute; inset: -12px; border-radius: 50%;
+  }
+  .note:hover .check { border-color: color-mix(in srgb, var(--ink) 42%, transparent); }
+  .check:hover, .check:focus-visible { border-color: var(--accent); color: var(--accent); }
+  .check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .empty { color: var(--ink-faint); font-size: 13.5px; padding: 10px 10px 16px; margin: 0; font-style: italic; }
+  .lane.over .empty { display: none; }
+
+  /* ---- ghost + toast ---- */
+  #ghost { position: fixed; pointer-events: none; z-index: 60; width: 240px; box-shadow: var(--shadow-lift); transform: rotate(-1deg) scale(1.01); }
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    background: var(--ink); color: var(--board);
+    border-radius: 10px; padding: 11px 14px; font-size: 14px;
+    display: flex; align-items: center; gap: 14px; z-index: 70;
+    box-shadow: var(--shadow-lift); max-width: calc(100vw - 32px);
+  }
+  .toast button { border: 0; background: transparent; color: var(--board); font: 600 14px var(--body); cursor: pointer; text-decoration: underline; padding: 0; }
+  .toast.warn { background: var(--warn); color: #fff; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .hint { color: var(--ink-faint); font-size: 12.5px; margin: 26px 0 0; text-align: center; }
+  .hint kbd {
+    font: 500 11.5px/1 var(--body); background: var(--surface);
+    border: 1px solid var(--rule); border-bottom-width: 2px;
+    border-radius: 4px; padding: 2px 5px; color: var(--ink-soft);
+  }
+
+  /* motion: everything arrives from where it belongs, in under a quarter second */
+  @keyframes settle {
+    from { opacity: 0; transform: rotate(var(--tilt)) translateY(-6px) scale(.98); }
+    to   { opacity: 1; transform: rotate(var(--tilt)); }
+  }
+  .note.enter { animation: settle .22s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } }
+  .toast { animation: rise .18s ease-out; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 class="mark">still.</h1>
+      <p class="tag">Your life, on one calm board.</p>
+    </div>
+    <div class="meta">
+      <p class="tag" id="theday"></p>
+      <span class="cleared" id="cleared"></span>
+    </div>
+  </header>
+
+  <form class="composer" id="composer">
+    <input type="text" id="draft" autocomplete="off" placeholder="What's on your mind?" aria-label="New note">
+    <div class="lanepick" role="group" aria-label="Where it goes">
+      <button type="button" data-pick="now" aria-pressed="true">Now</button>
+      <button type="button" data-pick="next" aria-pressed="false">Next</button>
+      <button type="button" data-pick="someday" aria-pressed="false">Someday</button>
+    </div>
+    <button class="add" type="submit" id="addbtn" disabled>Add note</button>
+  </form>
+
+  <div class="lanes" id="lanes"></div>
+
+  <p class="hint">
+    Drag a note, or focus one and press
+    <kbd>←</kbd> <kbd>→</kbd> to change lane,
+    <kbd>↑</kbd> <kbd>↓</kbd> to reorder,
+    <kbd>Enter</kbd> to mark it done.
+  </p>
+</div>
+
+<p class="sr" id="noteHelp">Left and right arrows move this note between lanes. Up and down arrows reorder it within its lane. Enter marks it done. Delete removes it.</p>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var LANES = [
+    { id: "now",     name: "Now",     sub: "what you're focusing on", limit: 7 },
+    { id: "next",    name: "Next",    sub: "soon, but not today",     limit: null },
+    { id: "someday", name: "Someday", sub: "no pressure to act",      limit: null }
+  ];
+  var KEY = "still.board.v1";
+  var CKEY = "still.cleared.v1";
+  var LIMIT = 7;
+
+  var seed = [
+    { id: n(), lane: "now",     text: "Finish data structures assignment", tint: 1 },
+    { id: n(), lane: "now",     text: "Reply to Ayesha about the group project", tint: 2 },
+    { id: n(), lane: "next",    text: "Update portfolio", tint: 3 },
+    { id: n(), lane: "next",    text: "Book dentist appointment", tint: 4 },
+    { id: n(), lane: "someday", text: "Learn photography", tint: 2 },
+    { id: n(), lane: "someday", text: "Read the Kahneman book properly", tint: 1 }
+  ];
+
+  var notes = load();
+  var pick = "now";
+  var justAdded = null;                        // gets the arrival animation on next render
+  var undo = null, toastEl = null, toastTimer = null;
+
+  function n() { return "n" + Math.random().toString(36).slice(2, 9); }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return seed.slice();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(notes)); } catch (e) {}
+  }
+
+  function inLane(id) { return notes.filter(function (x) { return x.lane === id; }); }
+  function say(msg) { document.getElementById("live").textContent = msg; }
+
+  // ---------- render ----------
+  var lanesEl = document.getElementById("lanes");
+
+  function render() {
+    lanesEl.innerHTML = "";
+    LANES.forEach(function (lane) {
+      var items = inLane(lane.id);
+      var full = lane.limit && items.length >= lane.limit;
+
+      var el = document.createElement("section");
+      el.className = "lane" + (full ? " at-limit" : "");
+      el.dataset.lane = lane.id;
+
+      var head = document.createElement("div");
+      head.className = "lane-head";
+      var h = document.createElement("h2");
+      h.className = "lane-name";
+      h.textContent = lane.name;
+      var sub = document.createElement("span");
+      sub.className = "lane-sub";
+      sub.textContent = lane.sub;
+      h.appendChild(sub);
+      var c = document.createElement("span");
+      c.className = "count" + (full ? " full" : "");
+      c.textContent = lane.limit ? items.length + " / " + lane.limit : String(items.length);
+      head.appendChild(h); head.appendChild(c);
+      el.appendChild(head);
+
+      if (lane.limit) {
+        var g = document.createElement("div");
+        g.className = "gauge";
+        g.setAttribute("aria-hidden", "true");
+        for (var i = 0; i < lane.limit; i++) {
+          var p = document.createElement("span");
+          p.className = "pip" + (i < items.length ? " on" : "");
+          g.appendChild(p);
+        }
+        el.appendChild(g);
+      }
+
+      var stack = document.createElement("div");
+      stack.className = "stack";
+      stack.dataset.stack = lane.id;
+      stack.setAttribute("role", "list");
+      stack.setAttribute("aria-label", lane.name + " — " + lane.sub);
+      if (!items.length) {
+        var e = document.createElement("p");
+        e.className = "empty";
+        e.textContent = lane.id === "now"
+          ? "Nothing here. What deserves today?"
+          : "Empty — and that's fine.";
+        stack.appendChild(e);
+      }
+      items.forEach(function (note) { stack.appendChild(noteEl(note, lane)); });
+      el.appendChild(stack);
+      lanesEl.appendChild(el);
+    });
+  }
+
+  function noteEl(note, lane) {
+    var el = document.createElement("article");
+    el.className = "note";
+    el.dataset.id = note.id;
+    el.dataset.tint = note.tint || 1;
+    el.tabIndex = 0;
+    el.setAttribute("role", "listitem");
+    el.setAttribute("aria-label", note.text + " — in " + lane.name);
+    el.setAttribute("aria-describedby", "noteHelp");
+    if (note.id === justAdded) { el.classList.add("enter"); justAdded = null; }
+
+    var p = document.createElement("p");
+    p.className = "note-text";
+    p.textContent = note.text;
+    p.contentEditable = "true";
+    p.spellcheck = false;
+    p.setAttribute("role", "textbox");
+    p.setAttribute("aria-multiline", "false");
+    p.setAttribute("aria-label", "Edit note");
+    el.appendChild(p);
+
+    var check = document.createElement("button");
+    check.type = "button";
+    check.className = "check";
+    check.textContent = "✓";
+    check.title = "Done";
+    check.setAttribute("aria-label", "Mark done: " + note.text);
+    check.addEventListener("click", function (e) { e.stopPropagation(); done(note.id); });
+    check.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    el.appendChild(check);
+
+    var acts = document.createElement("div");
+    acts.className = "note-actions";
+    var idx = LANES.findIndex(function (l) { return l.id === note.lane; });
+    if (idx > 0) acts.appendChild(iconBtn("←", "Move to " + LANES[idx - 1].name, function () { move(note.id, LANES[idx - 1].id); }));
+    if (idx < LANES.length - 1) acts.appendChild(iconBtn("→", "Move to " + LANES[idx + 1].name, function () { move(note.id, LANES[idx + 1].id); }));
+    acts.appendChild(iconBtn("×", "Delete note", function () { remove(note.id); }));
+    el.appendChild(acts);
+
+    // inline edit
+    p.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); p.blur(); }
+      if (ev.key === "Escape") { p.textContent = note.text; p.blur(); }
+    });
+    p.addEventListener("blur", function () {
+      var t = p.textContent.trim();
+      if (!t) { p.textContent = note.text; return; }
+      if (t !== note.text) { note.text = t; save(); render(); say("Note updated."); }
+    });
+
+    // keyboard move from the note itself
+    el.addEventListener("keydown", function (ev) {
+      if (ev.target !== el) return;
+      var i = LANES.findIndex(function (l) { return l.id === note.lane; });
+      if (ev.key === "ArrowLeft" && i > 0) { ev.preventDefault(); move(note.id, LANES[i - 1].id); }
+      if (ev.key === "ArrowRight" && i < LANES.length - 1) { ev.preventDefault(); move(note.id, LANES[i + 1].id); }
+      if (ev.key === "ArrowUp") { ev.preventDefault(); nudge(note.id, -1); }
+      if (ev.key === "ArrowDown") { ev.preventDefault(); nudge(note.id, 1); }
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); done(note.id); }
+      if (ev.key === "Delete" || ev.key === "Backspace") { ev.preventDefault(); remove(note.id); }
+    });
+
+    el.addEventListener("pointerdown", startDrag);
+    return el;
+  }
+
+  function iconBtn(glyph, label, fn) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "icon";
+    b.textContent = glyph;
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", function (e) { e.stopPropagation(); fn(); });
+    b.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    return b;
+  }
+
+  // ---------- actions ----------
+  function add(text, lane) {
+    if (lane === "now" && inLane("now").length >= LIMIT) {
+      toast("Now is full at " + LIMIT + ". Move something out first — that's the point.", null, true);
+      return false;
+    }
+    var id = n();
+    notes.push({ id: id, lane: lane, text: text, tint: 1 + (notes.length % 4) });
+    justAdded = id;
+    save(); render();
+    say("Added to " + lane + ".");
+    return true;
+  }
+
+  // the one function that changes where a note sits: lane, position, or both
+  function placeAt(id, lane, idx, quiet) {
+    var note = notes.find(function (x) { return x.id === id; });
+    if (!note) return false;
+    var changingLane = note.lane !== lane;
+    if (changingLane && lane === "now" && inLane("now").length >= LIMIT) {
+      toast("Now already holds " + LIMIT + ". Something has to leave before this can land.", null, true);
+      return false;
+    }
+
+    notes.splice(notes.indexOf(note), 1);
+    note.lane = lane;
+    var siblings = inLane(lane);              // the lane without this note
+    if (idx >= siblings.length) {
+      if (siblings.length) notes.splice(notes.indexOf(siblings[siblings.length - 1]) + 1, 0, note);
+      else notes.push(note);
+    } else {
+      notes.splice(notes.indexOf(siblings[Math.max(0, idx)]), 0, note);
+    }
+
+    save(); render();
+    if (!quiet) say(changingLane ? "Moved to " + lane + "." : "Reordered.");
+    var moved = lanesEl.querySelector('[data-id="' + id + '"]');
+    if (moved) moved.focus();
+    return true;
+  }
+
+  function move(id, lane) {
+    var note = notes.find(function (x) { return x.id === id; });
+    if (!note || note.lane === lane) return false;
+    return placeAt(id, lane, Infinity);
+  }
+
+  function nudge(id, by) {
+    var note = notes.find(function (x) { return x.id === id; });
+    if (!note) return false;
+    var items = inLane(note.lane);
+    var to = items.indexOf(note) + by;
+    if (to < 0 || to >= items.length) return false;
+    placeAt(id, note.lane, to, true);
+    say("Moved " + (by > 0 ? "down" : "up") + ".");
+    return true;
+  }
+
+  function done(id) {
+    var i = notes.findIndex(function (x) { return x.id === id; });
+    if (i < 0) return;
+    var rec = { note: notes[i], at: i };
+    var el = lanesEl.querySelector('[data-id="' + id + '"]');
+
+    var finish = function () {
+      var j = notes.indexOf(rec.note);
+      if (j < 0) return;
+      notes.splice(j, 1);
+      bumpCleared(1);
+      save(); render();
+      var n = clearedToday();
+      toast("Done — " + n + " cleared today.", function () {
+        notes.splice(rec.at, 0, rec.note);
+        bumpCleared(-1); save(); render();
+        say("Back on the board.");
+      });
+      say("Done.");
+    };
+
+    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (el && !reduced) { el.classList.add("done"); setTimeout(finish, 260); }
+    else finish();
+  }
+
+  // ---------- cleared today ----------
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function clearedToday() {
+    try {
+      var r = JSON.parse(localStorage.getItem(CKEY) || "null");
+      if (r && r.d === todayKey()) return r.n;
+    } catch (e) {}
+    return 0;
+  }
+  function bumpCleared(by) {
+    var n = Math.max(0, clearedToday() + by);
+    try { localStorage.setItem(CKEY, JSON.stringify({ d: todayKey(), n: n })); } catch (e) {}
+    paintCleared(by > 0);
+  }
+  function paintCleared(bump) {
+    var el = document.getElementById("cleared");
+    var n = clearedToday();
+    el.textContent = n ? n + " cleared today" : "";
+    if (bump && n) {
+      el.classList.remove("bump");
+      void el.offsetWidth;
+      el.classList.add("bump");
+    }
+  }
+
+  function remove(id) {
+    var i = notes.findIndex(function (x) { return x.id === id; });
+    if (i < 0) return;
+    undo = { note: notes[i], at: i };
+    notes.splice(i, 1);
+    save(); render();
+    toast("Note removed.", function () {
+      if (!undo) return;
+      notes.splice(undo.at, 0, undo.note);
+      undo = null; save(); render(); say("Restored.");
+    });
+  }
+
+  // ---------- toast ----------
+  function toast(msg, onUndo, isWarn) {
+    if (toastEl) toastEl.remove();
+    clearTimeout(toastTimer);
+    toastEl = document.createElement("div");
+    toastEl.className = "toast" + (isWarn ? " warn" : "");
+    var s = document.createElement("span");
+    s.textContent = msg;
+    toastEl.appendChild(s);
+    if (onUndo) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "Undo";
+      b.addEventListener("click", function () { onUndo(); toastEl.remove(); toastEl = null; });
+      toastEl.appendChild(b);
+    }
+    document.body.appendChild(toastEl);
+    toastTimer = setTimeout(function () {
+      if (toastEl) { toastEl.remove(); toastEl = null; }
+      undo = null;
+    }, onUndo ? 6000 : 4000);
+  }
+
+  // ---------- drag (pointer-based: works with mouse and touch) ----------
+  var drag = null, slot = null;
+
+  // the note the slot should sit before, or null for the end of the lane
+  function slotBefore(stack, y) {
+    var els = Array.prototype.slice.call(stack.querySelectorAll(".note:not(.dragging)"));
+    for (var i = 0; i < els.length; i++) {
+      var r = els[i].getBoundingClientRect();
+      if (y < r.top + r.height / 2) return els[i];
+    }
+    return null;
+  }
+
+  function startDrag(ev) {
+    if (ev.button === 1 || ev.button === 2) return;
+    var el = ev.currentTarget;
+    if (document.activeElement === el.querySelector(".note-text")) return;
+    var rect = el.getBoundingClientRect();
+    drag = {
+      id: el.dataset.id, el: el,
+      dx: ev.clientX - rect.left, dy: ev.clientY - rect.top,
+      w: rect.width, h: rect.height, started: false,
+      x0: ev.clientX, y0: ev.clientY, ghost: null, lane: null
+    };
+    el.setPointerCapture(ev.pointerId);
+    el.addEventListener("pointermove", onDrag);
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+  }
+
+  function onDrag(ev) {
+    if (!drag) return;
+    if (!drag.started) {
+      if (Math.abs(ev.clientX - drag.x0) + Math.abs(ev.clientY - drag.y0) < 6) return;
+      drag.started = true;
+      var g = drag.el.cloneNode(true);
+      g.id = "ghost";
+      g.className = "note";
+      g.style.width = drag.w + "px";
+      var a = g.querySelector(".note-actions");
+      if (a) a.remove();
+      var c = g.querySelector(".check");
+      if (c) c.remove();
+      document.body.appendChild(g);
+      drag.ghost = g;
+
+      slot = document.createElement("div");
+      slot.className = "slot";
+      slot.style.height = drag.h + "px";
+      drag.el.classList.add("dragging");
+    }
+    drag.ghost.style.left = (ev.clientX - drag.dx) + "px";
+    drag.ghost.style.top = (ev.clientY - drag.dy) + "px";
+
+    drag.ghost.hidden = true;
+    var under = document.elementFromPoint(ev.clientX, ev.clientY);
+    drag.ghost.hidden = false;
+    var lane = under && under.closest ? under.closest(".lane") : null;
+
+    Array.prototype.forEach.call(lanesEl.children, function (l) { l.classList.remove("over", "deny"); });
+    drag.lane = lane ? lane.dataset.lane : null;
+    drag.blocked = false;
+
+    if (!lane) { if (slot.parentNode) slot.remove(); return; }
+
+    var blocked = drag.lane === "now" && inLane("now").length >= LIMIT &&
+                  notes.find(function (x) { return x.id === drag.id; }).lane !== "now";
+    lane.classList.add(blocked ? "deny" : "over");
+    drag.blocked = blocked;
+    if (blocked) { if (slot.parentNode) slot.remove(); return; }
+
+    var stack = lane.querySelector(".stack");
+    stack.insertBefore(slot, slotBefore(stack, ev.clientY));
+  }
+
+  function endDrag(ev) {
+    if (!drag) return;
+    var d = drag;
+    drag = null;
+    d.el.removeEventListener("pointermove", onDrag);
+    d.el.removeEventListener("pointerup", endDrag);
+    d.el.removeEventListener("pointercancel", endDrag);
+    try { d.el.releasePointerCapture(ev.pointerId); } catch (e) {}
+    if (d.ghost) d.ghost.remove();
+
+    // where the slot ended up is where the note goes
+    var idx = null;
+    if (slot && slot.parentNode) {
+      var kids = Array.prototype.slice.call(slot.parentNode.children);
+      idx = kids.filter(function (k) {
+        return k === slot || (k.classList.contains("note") && !k.classList.contains("dragging"));
+      }).indexOf(slot);
+      slot.remove();
+    }
+    slot = null;
+
+    d.el.classList.remove("dragging");
+    Array.prototype.forEach.call(lanesEl.children, function (l) { l.classList.remove("over", "deny"); });
+    if (d.started && d.blocked) {
+      toast("Now already holds " + LIMIT + ". Something has to leave before this can land.", null, true);
+    } else if (d.started && d.lane && idx !== null) {
+      placeAt(d.id, d.lane, idx);
+    }
+  }
+
+  // ---------- composer ----------
+  var form = document.getElementById("composer");
+  var draft = document.getElementById("draft");
+  var addbtn = document.getElementById("addbtn");
+
+  draft.addEventListener("input", function () { addbtn.disabled = !draft.value.trim(); });
+
+  Array.prototype.forEach.call(form.querySelectorAll("[data-pick]"), function (b) {
+    b.addEventListener("click", function () {
+      pick = b.dataset.pick;
+      Array.prototype.forEach.call(form.querySelectorAll("[data-pick]"), function (o) {
+        o.setAttribute("aria-pressed", String(o === b));
+      });
+      draft.focus();
+    });
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var t = draft.value.trim();
+    if (!t) return;
+    if (add(t, pick)) { draft.value = ""; addbtn.disabled = true; }
+    draft.focus();
+  });
+
+  // ---------- date line ----------
+  var d = new Date();
+  document.getElementById("theday").textContent =
+    d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+  render();
+  paintCleared(false);
+})();
+</script>

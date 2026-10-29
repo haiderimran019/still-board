@@ -1,0 +1,446 @@
+<title>still. as a canvas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap">
+<style>
+  /* One zoomable surface. Zones keep the Now/Next/Someday meaning;
+     position inside a zone is the user's own. */
+  :root {
+    --board: #fdf7ec; --line: #efe3cf; --surface: #fffdf8;
+    --ink: #3a3026; --soft: #6b5f4c; --faint: #7c6e58; --rule: #ece0cd;
+    --accent: #6e5220; --warn: #9c5d12;
+    --n1: #ffeba3; --n2: #cdeed6; --n3: #ded8f2; --n4: #ffd4c2;
+    --edge: rgba(58,48,38,.13);
+    --zone: rgba(58,48,38,.035);
+    --sh: 0 2px 0 rgba(58,48,38,.07), 0 7px 16px -10px rgba(58,48,38,.5);
+    --sh-lift: 0 4px 0 rgba(58,48,38,.09), 0 22px 36px -14px rgba(58,48,38,.55);
+    --ui: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+    --hand: "Shantell Sans", "Gabarito", cursive;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --board: #1a1713; --line: #252019; --surface: #241f19;
+      --ink: #f2eae0; --soft: #b5a897; --faint: #8d8273; --rule: #302922;
+      --accent: #e8c892; --warn: #e8a74e;
+      --n1: #4a3f1e; --n2: #2d4031; --n3: #37314f; --n4: #4a3328;
+      --edge: rgba(0,0,0,.45); --zone: rgba(255,255,255,.028);
+      --sh: 0 2px 0 rgba(0,0,0,.35), 0 7px 16px -10px rgba(0,0,0,.8);
+      --sh-lift: 0 4px 0 rgba(0,0,0,.4), 0 22px 36px -14px rgba(0,0,0,.9);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --board: #1a1713; --line: #252019; --surface: #241f19;
+    --ink: #f2eae0; --soft: #b5a897; --faint: #8d8273; --rule: #302922;
+    --accent: #e8c892; --warn: #e8a74e;
+    --n1: #4a3f1e; --n2: #2d4031; --n3: #37314f; --n4: #4a3328;
+    --edge: rgba(0,0,0,.45); --zone: rgba(255,255,255,.028);
+    --sh: 0 2px 0 rgba(0,0,0,.35), 0 7px 16px -10px rgba(0,0,0,.8);
+    --sh-lift: 0 4px 0 rgba(0,0,0,.4), 0 22px 36px -14px rgba(0,0,0,.9);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--board); color: var(--ink);
+    font-family: var(--ui); font-size: 15px; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #stage {
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--line) 1.4px, transparent 0);
+    background-size: 26px 26px;
+    touch-action: none; cursor: grab; overflow: hidden;
+  }
+  #stage.panning { cursor: grabbing; }
+  #world { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform; }
+
+  .zone {
+    position: absolute; border-radius: 26px;
+    background: var(--zone); border: 1.5px dashed var(--rule);
+    transition: background .16s ease, border-color .16s ease;
+  }
+  .zone.over { background: color-mix(in srgb, var(--accent) 9%, transparent); border-color: var(--accent); }
+  .zone.deny { background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: var(--warn); }
+  .zone-label {
+    position: absolute; top: -4px; left: 26px;
+    font-size: 30px; font-weight: 700; letter-spacing: -.03em; color: var(--ink);
+  }
+  .zone-label small { display: block; font-size: 15px; font-weight: 400; color: var(--faint); letter-spacing: 0; margin-top: -2px; }
+  .zone-count { position: absolute; top: 4px; right: 26px; font-size: 17px; font-weight: 600; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .zone-count.full { color: var(--warn); }
+
+  .note {
+    position: absolute; background: var(--n1);
+    border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--sh); padding: 16px 18px;
+    font-family: var(--hand); font-weight: 500; font-size: 17px; line-height: 1.4;
+    color: var(--ink); cursor: grab; touch-action: none;
+    transition: box-shadow .16s ease;
+  }
+  .note[data-tint="2"] { background: var(--n2); }
+  .note[data-tint="3"] { background: var(--n3); }
+  .note[data-tint="4"] { background: var(--n4); }
+  .note.lift { box-shadow: var(--sh-lift); cursor: grabbing; z-index: 5; }
+  .note:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- chrome ---------- */
+  .hud {
+    position: fixed; z-index: 20;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    top: max(14px, env(safe-area-inset-top, 0px));
+  }
+  .hud h1 { font-size: 25px; font-weight: 700; letter-spacing: -.035em; margin: 0; }
+  .hud p { margin: 1px 0 0; font-size: 13px; color: var(--soft); }
+
+  .dock {
+    position: fixed; z-index: 20;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex; gap: 6px; align-items: center;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 13px; padding: 5px; box-shadow: var(--sh);
+  }
+  .dock button {
+    border: 0; background: transparent; color: var(--soft); cursor: pointer;
+    font: 600 14px/1 var(--ui); min-width: 38px; min-height: 38px;
+    border-radius: 9px; display: grid; place-items: center;
+  }
+  .dock button:hover { background: var(--board); color: var(--ink); }
+  .dock button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dock .pct { min-width: 50px; text-align: center; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--faint); }
+  .dock .fit { font-size: 13px; padding: 0 12px; }
+
+  .tip {
+    position: fixed; z-index: 20;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    font-size: 13px; color: var(--faint); text-align: center;
+    background: color-mix(in srgb, var(--board) 82%, transparent);
+    padding: 6px 14px; border-radius: 999px;
+    pointer-events: none; max-width: calc(100vw - 32px);
+  }
+  @media (max-width: 720px) { .tip { display: none; } }
+
+  .flash {
+    position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    background: var(--warn); color: #fff; font-size: 14px; font-weight: 500;
+    padding: 11px 16px; border-radius: 11px; box-shadow: var(--sh-lift);
+    max-width: calc(100vw - 32px);
+  }
+  @keyframes drop { from { opacity: 0; transform: translate(-50%, -8px); } }
+  .flash { animation: drop .18s ease-out; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div id="stage">
+  <div id="world"></div>
+</div>
+
+<div class="hud">
+  <h1>still.</h1>
+  <p id="sub">Pinch, or scroll to zoom</p>
+</div>
+
+<div class="dock">
+  <button type="button" id="out" aria-label="Zoom out">−</button>
+  <span class="pct" id="pct">100%</span>
+  <button type="button" id="in" aria-label="Zoom in">+</button>
+  <button type="button" class="fit" id="fit">Fit all</button>
+</div>
+
+<p class="tip">Drag a note to move it between zones · drag the board to pan · double-click to zoom in</p>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var LIMIT = 7;
+  var ZONES = [
+    { id: "now",     name: "Now",     sub: "what you're focusing on", x: 60,   y: 120, w: 700, h: 940, limit: LIMIT },
+    { id: "next",    name: "Next",    sub: "soon, but not today",     x: 820,  y: 120, w: 700, h: 940, limit: null },
+    { id: "someday", name: "Someday", sub: "no pressure to act",      x: 1580, y: 120, w: 700, h: 940, limit: null }
+  ];
+
+  var notes = [
+    { id: "a", zone: "now",     x: 120,  y: 250, text: "Finish data structures assignment", tint: 1 },
+    { id: "b", zone: "now",     x: 400,  y: 420, text: "Reply to Ayesha about the group project", tint: 2 },
+    { id: "c", zone: "now",     x: 150,  y: 620, text: "Pay hostel fee", tint: 3 },
+    { id: "d", zone: "now",     x: 420,  y: 760, text: "Print the lab report", tint: 4 },
+    { id: "e", zone: "next",    x: 880,  y: 260, text: "Update portfolio", tint: 3 },
+    { id: "f", zone: "next",    x: 1160, y: 400, text: "Book dentist appointment", tint: 4 },
+    { id: "g", zone: "next",    x: 900,  y: 580, text: "Fix the bike chain", tint: 1 },
+    { id: "h", zone: "next",    x: 1180, y: 740, text: "Sort out the scholarship form", tint: 2 },
+    { id: "i", zone: "someday", x: 1640, y: 240, text: "Learn photography", tint: 2 },
+    { id: "j", zone: "someday", x: 1920, y: 400, text: "Read the Kahneman book properly", tint: 1 },
+    { id: "k", zone: "someday", x: 1660, y: 600, text: "Start running again", tint: 4 },
+    { id: "l", zone: "someday", x: 1940, y: 760, text: "Teach myself to cook properly", tint: 3 }
+  ];
+
+  var stage = document.getElementById("stage");
+  var world = document.getElementById("world");
+  var pct = document.getElementById("pct");
+  var live = document.getElementById("live");
+
+  var view = { x: 0, y: 0, k: 1 };
+  var MIN = 0.1, MAX = 2.4;
+  var flashEl = null, flashTimer = null;
+
+  function inZone(id) { return notes.filter(function (n) { return n.zone === id; }); }
+  function say(m) { live.textContent = m; }
+
+  // ---------- build ----------
+  ZONES.forEach(function (z) {
+    var el = document.createElement("div");
+    el.className = "zone";
+    el.dataset.zone = z.id;
+    el.style.cssText = "left:" + z.x + "px;top:" + z.y + "px;width:" + z.w + "px;height:" + z.h + "px";
+    var lab = document.createElement("div");
+    lab.className = "zone-label";
+    lab.innerHTML = "";
+    lab.appendChild(document.createTextNode(z.name));
+    var s = document.createElement("small");
+    s.textContent = z.sub;
+    lab.appendChild(s);
+    lab.style.top = "-74px";
+    el.appendChild(lab);
+    var c = document.createElement("div");
+    c.className = "zone-count";
+    c.dataset.count = z.id;
+    c.style.top = "-62px";
+    el.appendChild(c);
+    world.appendChild(el);
+    z.el = el;
+  });
+
+  notes.forEach(function (n) {
+    var el = document.createElement("div");
+    el.className = "note";
+    el.dataset.id = n.id;
+    el.dataset.tint = n.tint;
+    el.tabIndex = 0;
+    el.style.width = "250px";
+    el.textContent = n.text;
+    el.style.transform = "translate(" + n.x + "px," + n.y + "px) rotate(" + (n.id.charCodeAt(0) % 2 ? -0.5 : 0.5) + "deg)";
+    el.addEventListener("pointerdown", onNoteDown);
+    world.appendChild(el);
+    n.el = el;
+  });
+
+  function place(n) {
+    n.el.style.transform = "translate(" + n.x + "px," + n.y + "px) rotate(" + (n.id.charCodeAt(0) % 2 ? -0.5 : 0.5) + "deg)";
+  }
+
+  function counts() {
+    ZONES.forEach(function (z) {
+      var c = z.el.querySelector(".zone-count");
+      var n = inZone(z.id).length;
+      c.textContent = z.limit ? n + " / " + z.limit : String(n);
+      c.classList.toggle("full", !!(z.limit && n >= z.limit));
+    });
+  }
+
+  // ---------- view ----------
+  function apply() {
+    world.style.transform = "translate(" + view.x + "px," + view.y + "px) scale(" + view.k + ")";
+    pct.textContent = Math.round(view.k * 100) + "%";
+  }
+
+  function zoomAt(sx, sy, factor) {
+    var k = Math.max(MIN, Math.min(MAX, view.k * factor));
+    if (k === view.k) return;
+    // keep the point under the cursor fixed
+    view.x = sx - (sx - view.x) * (k / view.k);
+    view.y = sy - (sy - view.y) * (k / view.k);
+    view.k = k;
+    apply();
+  }
+
+  function fit(animate) {
+    var pad = 70;
+    var minX = Math.min.apply(null, ZONES.map(function (z) { return z.x; })) - pad;
+    var minY = Math.min.apply(null, ZONES.map(function (z) { return z.y; })) - 90;
+    var maxX = Math.max.apply(null, ZONES.map(function (z) { return z.x + z.w; })) + pad;
+    var maxY = Math.max.apply(null, ZONES.map(function (z) { return z.y + z.h; })) + pad;
+    var k = Math.min(innerWidth / (maxX - minX), innerHeight / (maxY - minY));
+    k = Math.max(MIN, Math.min(MAX, k));
+    view.k = k;
+    view.x = (innerWidth - (maxX - minX) * k) / 2 - minX * k;
+    view.y = (innerHeight - (maxY - minY) * k) / 2 - minY * k;
+    if (animate) {
+      world.style.transition = "transform .3s ease";
+      setTimeout(function () { world.style.transition = ""; }, 320);
+    }
+    apply();
+  }
+
+  // ---------- pointers ----------
+  var pointers = new Map();
+  var pan = null, pinch = null, drag = null;
+
+  stage.addEventListener("pointerdown", function (ev) {
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (pointers.size === 2) { startPinch(); return; }
+    if (drag) return;
+    if (ev.target.closest(".note")) return;      // the note's own handler took it
+    pan = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
+    stage.classList.add("panning");
+    stage.setPointerCapture(ev.pointerId);
+  });
+
+  function onNoteDown(ev) {
+    if (pointers.size > 1) return;
+    ev.stopPropagation();
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    var el = ev.currentTarget;
+    var n = notes.find(function (x) { return x.id === el.dataset.id; });
+    drag = { n: n, sx: ev.clientX, sy: ev.clientY, ox: n.x, oy: n.y, moved: false };
+    el.classList.add("lift");
+    el.setPointerCapture(ev.pointerId);
+    el.addEventListener("pointermove", onNoteMove);
+    el.addEventListener("pointerup", onNoteUp);
+    el.addEventListener("pointercancel", onNoteUp);
+  }
+
+  function onNoteMove(ev) {
+    if (!drag) return;
+    if (pointers.size > 1) { onNoteUp(ev); return; }
+    var dx = (ev.clientX - drag.sx) / view.k;
+    var dy = (ev.clientY - drag.sy) / view.k;
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+    drag.moved = true;
+    drag.n.x = drag.ox + dx;
+    drag.n.y = drag.oy + dy;
+    place(drag.n);
+
+    var z = zoneUnder(drag.n);
+    ZONES.forEach(function (q) { q.el.classList.remove("over", "deny"); });
+    if (z) {
+      var blocked = z.id === "now" && drag.n.zone !== "now" && inZone("now").length >= LIMIT;
+      z.el.classList.add(blocked ? "deny" : "over");
+    }
+  }
+
+  function onNoteUp(ev) {
+    if (!drag) return;
+    var d = drag; drag = null;
+    pointers.delete(ev.pointerId);
+    var el = d.n.el;
+    el.classList.remove("lift");
+    el.removeEventListener("pointermove", onNoteMove);
+    el.removeEventListener("pointerup", onNoteUp);
+    el.removeEventListener("pointercancel", onNoteUp);
+    ZONES.forEach(function (q) { q.el.classList.remove("over", "deny"); });
+    if (!d.moved) return;
+
+    var z = zoneUnder(d.n);
+    if (!z) { d.n.x = d.ox; d.n.y = d.oy; place(d.n); say("Dropped outside a zone; put back."); return; }
+    if (z.id === "now" && d.n.zone !== "now" && inZone("now").length >= LIMIT) {
+      d.n.x = d.ox; d.n.y = d.oy; place(d.n);
+      flash("Now already holds " + LIMIT + ". Something has to leave before this can land.");
+      return;
+    }
+    if (z.id !== d.n.zone) { d.n.zone = z.id; counts(); say("Moved to " + z.name + "."); }
+  }
+
+  // which zone holds the note's centre
+  function zoneUnder(n) {
+    var cx = n.x + 125, cy = n.y + 36;
+    for (var i = 0; i < ZONES.length; i++) {
+      var z = ZONES[i];
+      if (cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h) return z;
+    }
+    return null;
+  }
+
+  stage.addEventListener("pointermove", function (ev) {
+    if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (pinch && pointers.size >= 2) { movePinch(); return; }
+    if (pan) {
+      view.x = pan.vx + (ev.clientX - pan.x);
+      view.y = pan.vy + (ev.clientY - pan.y);
+      apply();
+    }
+  });
+
+  function endPointer(ev) {
+    pointers.delete(ev.pointerId);
+    if (pointers.size < 2) pinch = null;
+    if (pan) { pan = null; stage.classList.remove("panning"); }
+  }
+  stage.addEventListener("pointerup", endPointer);
+  stage.addEventListener("pointercancel", endPointer);
+
+  function two() {
+    var it = pointers.values();
+    return [it.next().value, it.next().value];
+  }
+  function startPinch() {
+    pan = null; stage.classList.remove("panning");
+    var p = two();
+    pinch = { d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) };
+  }
+  function movePinch() {
+    var p = two();
+    var d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+    if (!pinch.d) { pinch.d = d; return; }
+    var mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
+    zoomAt(mx, my, d / pinch.d);
+    pinch.d = d;
+  }
+
+  // wheel / trackpad
+  stage.addEventListener("wheel", function (ev) {
+    ev.preventDefault();
+    if (ev.ctrlKey) {                       // trackpad pinch arrives as ctrl+wheel
+      zoomAt(ev.clientX, ev.clientY, Math.exp(-ev.deltaY / 120));
+    } else if (ev.shiftKey) {
+      view.x -= ev.deltaY; apply();
+    } else {
+      zoomAt(ev.clientX, ev.clientY, Math.exp(-ev.deltaY / 420));
+    }
+  }, { passive: false });
+
+  stage.addEventListener("dblclick", function (ev) {
+    zoomAt(ev.clientX, ev.clientY, 1.6);
+  });
+
+  // ---------- chrome ----------
+  document.getElementById("in").addEventListener("click", function () { zoomAt(innerWidth / 2, innerHeight / 2, 1.3); });
+  document.getElementById("out").addEventListener("click", function () { zoomAt(innerWidth / 2, innerHeight / 2, 1 / 1.3); });
+  document.getElementById("fit").addEventListener("click", function () { fit(true); say("Whole board in view."); });
+
+  addEventListener("keydown", function (ev) {
+    if (ev.key === "+" || ev.key === "=") { zoomAt(innerWidth / 2, innerHeight / 2, 1.3); }
+    if (ev.key === "-") { zoomAt(innerWidth / 2, innerHeight / 2, 1 / 1.3); }
+    if (ev.key === "0") { fit(true); }
+    var step = 90;
+    if (ev.key === "ArrowLeft")  { view.x += step; apply(); }
+    if (ev.key === "ArrowRight") { view.x -= step; apply(); }
+    if (ev.key === "ArrowUp")    { view.y += step; apply(); }
+    if (ev.key === "ArrowDown")  { view.y -= step; apply(); }
+  });
+
+  function flash(msg) {
+    if (flashEl) flashEl.remove();
+    clearTimeout(flashTimer);
+    flashEl = document.createElement("div");
+    flashEl.className = "flash";
+    flashEl.textContent = msg;
+    document.body.appendChild(flashEl);
+    say(msg);
+    flashTimer = setTimeout(function () { if (flashEl) { flashEl.remove(); flashEl = null; } }, 3600);
+  }
+
+  addEventListener("resize", function () { apply(); });
+
+  counts();
+  fit(false);
+})();
+</script>
