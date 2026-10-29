@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>still. — Privacy</title>
+<meta name="description" content="What still. does with your notes: nothing leaves your phone unless you sign in, and then only into a private folder in your own Google Drive.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#fdf7ec; --surface:#fffdf8; --ink:#3a3026; --ink-soft:#6b5f4c;
+  --ink-faint:#7c6e58; --rule:#ece0cd; --accent:#6e5220;
+  --ui:'Gabarito',system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --board:#1a1713; --surface:#241f19; --ink:#f2eae0; --ink-soft:#b5a897;
+    --ink-faint:#8d8273; --rule:#302922; --accent:#e8c892; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);color:var(--ink);font-family:var(--ui);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:66ch;margin:0 auto;padding:30px 20px 80px}
+a{color:var(--accent)}
+.mark{font-size:25px;font-weight:700;letter-spacing:-.045em;text-decoration:none;color:var(--ink)}
+h1{font-size:clamp(29px,5vw,40px);font-weight:700;letter-spacing:-.03em;margin:34px 0 6px}
+h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:34px 0 8px}
+p,li{color:var(--ink-soft);margin:0 0 12px}
+li{margin-bottom:7px}
+strong{color:var(--ink);font-weight:600}
+.when{color:var(--ink-faint);font-size:14px}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:15px;
+  padding:19px;margin:22px 0}
+.box p:last-child{margin-bottom:0}
+footer{border-top:1px solid var(--rule);margin-top:44px;padding-top:20px;
+  font-size:14px;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="mark" href="./">still.</a>
+
+<h1>Privacy</h1>
+<p class="when">Last updated 29 October 2026. This is the whole policy — there is no longer version.</p>
+
+<div class="box">
+  <p><strong>The short version.</strong> still. has no server. Signed out, nothing you write
+  ever leaves your phone, because there is nowhere for it to go. Signed in, one file goes
+  to a private folder in your own Google Drive that only this app can open. There is no
+  analytics, no advertising, no crash reporting and no third party we hand anything to.</p>
+</div>
+
+<h2>What is stored on your phone</h2>
+<p>Your notes, which section each is in, when you wrote it, any urgency or reminder you
+set, and two settings: the theme you picked and when the board last synced. All of it
+sits in a database inside the app's own storage. Deleting the app deletes it.</p>
+
+<h2>If you never sign in</h2>
+<p>Then that is the entire story. The app makes no network requests of its own. It does
+not know who you are, and neither do we.</p>
+
+<h2>If you sign in with Google</h2>
+<p>Signing in is optional and exists for one reason: so your board is on every phone you
+sign in on.</p>
+<ul>
+  <li><strong>What Google tells the app:</strong> your email address, your name, and the
+  fact that you granted access. Held in memory while the app is open and not written to
+  disk. Your email is shown on the profile screen so you can see which account you are on.</li>
+  <li><strong>What the app puts in your Drive:</strong> one JSON file containing your
+  notes, inside <code>appDataFolder</code> — a hidden space Drive keeps for each app. It
+  does not appear in your Drive, other apps cannot read it, and still. cannot read
+  anything else in your Drive. Not one other file. That is enforced by Google, not by us:
+  the app only ever asks for the <code>drive.appdata</code> permission.</li>
+  <li><strong>Who else sees it:</strong> nobody. The file is in your account. It is never
+  sent to us, because there is no us to send it to — no server, no database, no logs.</li>
+</ul>
+<p>Signing out forgets the token immediately. Your notes stay on the phone, and the file
+stays in your Drive until you delete it.</p>
+
+<h2>Deleting what is there</h2>
+<ul>
+  <li><strong>On the phone:</strong> delete a note, or uninstall the app.</li>
+  <li><strong>In your Drive:</strong> open <a href="https://drive.google.com/drive/settings">
+  Drive settings</a> → Manage apps → still. → Delete hidden app data. You can also remove
+  the app's access entirely at <a href="https://myaccount.google.com/permissions">
+  your Google account permissions</a>.</li>
+</ul>
+
+<h2>Notifications</h2>
+<p>Reminders are local notifications scheduled by your phone. Nothing is sent through a
+server, and the app does not use push notifications at all.</p>
+
+<h2>Children</h2>
+<p>still. is not directed at children under 13 and collects nothing that would identify
+anyone, signed in or out.</p>
+
+<h2>Changes</h2>
+<p>If this ever changes — particularly if anything new leaves the phone — this page
+changes with it and the date above moves. The app is open source, so the claims here can
+be checked against the code rather than taken on trust.</p>
+
+<h2>Getting in touch</h2>
+<p>Open an issue on the <a href="https://github.com/haiderimran019/still-board/issues">
+project on GitHub</a>, or email <a href="mailto:thehaiderimran19@gmail.com">
+thehaiderimran19@gmail.com</a>.</p>
+
+<footer>still. — a calm board for everything you're carrying. No trackers on this page.</footer>
+</div>
+</body>
+</html>

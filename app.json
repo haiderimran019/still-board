@@ -8,18 +8,23 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.haiderimran.still"
+      "bundleIdentifier": "com.haiderimran.still",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#fdf7ec",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "edgeToEdgeEnabled": true,
-      "package": "com.haiderimran.still"
+      "package": "com.haiderimran.still",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -28,7 +33,28 @@
       "expo-font",
       "expo-sqlite",
       "expo-web-browser",
-      "expo-sharing"
-    ]
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#6e5220",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#fdf7ec",
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#1a1713"
+          }
+        }
+      ]
+    ],
+    "description": "A calm board for everything you're carrying. Now, Next, Next week, Someday \u2014 and a hard limit of seven things today.",
+    "primaryColor": "#6e5220",
+    "backgroundColor": "#fdf7ec"
   }
 }

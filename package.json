@@ -15,6 +15,7 @@
     "expo-haptics": "~58.0.7",
     "expo-notifications": "~58.1.7",
     "expo-sharing": "~58.0.21",
+    "expo-splash-screen": "~58.0.12",
     "expo-sqlite": "~58.0.14",
     "expo-status-bar": "~58.0.4",
     "expo-web-browser": "~58.0.7",
@@ -34,5 +35,12 @@
     "test": "node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/positions.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/whispers.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/schedule.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/drag.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/done.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/board/__tests__/dayFilter.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/backup/__tests__/format.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/sync/__tests__/sync.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/migration.test.ts && node --experimental-strip-types --no-warnings --import ./src/db/__tests__/register.mjs src/db/__tests__/repository.test.ts",
     "typecheck": "tsc --noEmit"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "react-native"
+      ]
+    }
+  }
 }
