@@ -4,13 +4,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CaptureSheet } from '../components/CaptureSheet';
+import { DragProvider, DraggableNote, useDrag } from '../components/DragBoard';
 import { NoteCard } from '../components/NoteCard';
 import { NoteSheet } from '../components/NoteSheet';
 import { SomedayBox } from '../components/SomedayBox';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
 import { headerLine, somedayFade, splitSomeday } from '../board/whispers';
-import { APP_NAME } from '../config';
+import { APP_NAME, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
@@ -33,6 +34,8 @@ type Props = {
   onComplete: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onRemind: (id: string, at: number | null) => Promise<void>;
+  onReorder: (id: string, section: Section, index: number) => Promise<void>;
+  onRefused: (section: Section) => void;
 };
 
 /**
@@ -54,6 +57,8 @@ export function BoardScreen({
   onComplete,
   onDelete,
   onRemind,
+  onReorder,
+  onRefused,
 }: Props) {
   const t = useTheme();
   const [capturing, setCapturing] = useState(false);
@@ -67,6 +72,11 @@ export function BoardScreen({
   const chip = todayCount > 0 ? `${todayCount} cleared today` : doneCount > 0 ? `${doneCount} done` : null;
 
   return (
+    <DragProvider
+      canDrop={(to) => to !== 'now' || nowNotes.length < NOW_LIMIT}
+      onDrop={(id, section, index) => void onReorder(id, section, index)}
+      onRefused={onRefused}
+    >
     <SafeAreaView style={[s.screen, { backgroundColor: t.c.board }]} edges={['top', 'bottom']}>
       <StatusBar style={t.isDark ? 'light' : 'dark'} />
 
@@ -155,6 +165,7 @@ export function BoardScreen({
         onSwap={onSwap}
       />
     </SafeAreaView>
+    </DragProvider>
   );
 }
 
@@ -178,48 +189,63 @@ function SectionNotes({
   onComplete: (note: Note) => void;
 }) {
   const t = useTheme();
-
-  if (items.length === 0) {
-    return (
-      <View style={s.notes}>
-        <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
-          {SECTION_COPY[section].empty}
-        </Text>
-      </View>
-    );
-  }
-
-  if (section !== 'someday') {
-    return (
-      <View style={s.notes}>
-        {items.map((note, i) => (
-          <NoteCard key={note.id} note={note} index={i} onPress={onOpen} onComplete={onComplete} />
-        ))}
-      </View>
-    );
-  }
+  const drag = useDrag();
 
   const now = Date.now();
-  const { out, boxed } = splitSomeday(items, now);
+  const { out, boxed } = section === 'someday' ? splitSomeday(items, now) : { out: items, boxed: [] };
+
+  // Where the drop line sits among the notes actually on screen. The target
+  // index counts the notes that will remain, so if the note being carried
+  // came from this section it has to be added back in.
+  const carriedHere = out.findIndex((n) => n.id === drag.draggingId);
+  const line =
+    drag.draggingId && drag.target?.section === section
+      ? drag.target.index + (carriedHere >= 0 && carriedHere <= drag.target.index ? 1 : 0)
+      : -1;
+
+  const dropLine = (
+    <View
+      key="drop-line"
+      style={[s.drop, { backgroundColor: drag.allowed ? t.c.accent : t.c.warn }]}
+    />
+  );
 
   return (
-    <View style={s.notes}>
+    // The whole section is the drop zone, empty space included, so a note can
+    // be dropped into a section that has nothing in it yet.
+    <View
+      ref={(v) => drag.registerSection(section, v)}
+      collapsable={false}
+      style={[s.notes, items.length === 0 && s.notesEmpty]}
+    >
+      {items.length === 0 && (
+        <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
+          {line >= 0 ? 'Drop it here' : SECTION_COPY[section].empty}
+        </Text>
+      )}
+
       {out.map((note, i) => (
-        <NoteCard
-          key={note.id}
-          note={note}
-          index={i}
-          fade={somedayFade(note.createdAt, now)}
-          onPress={onOpen}
-          onComplete={onComplete}
-        />
+        <Fragment key={note.id}>
+          {line === i && dropLine}
+          <DraggableNote
+            note={note}
+            index={i}
+            fade={section === 'someday' ? somedayFade(note.createdAt, now) : undefined}
+            onPress={onOpen}
+            onComplete={onComplete}
+          />
+        </Fragment>
       ))}
-      {out.length === 0 && boxed.length > 0 && (
+      {line >= out.length && out.length > 0 && dropLine}
+
+      {section === 'someday' && out.length === 0 && boxed.length > 0 && (
         <Text style={[type.caption, s.empty, { color: t.c.inkFaint }]}>
           Everything here has settled into the box.
         </Text>
       )}
-      <SomedayBox notes={boxed} open={open} onToggle={onToggleBox} onOpen={onOpen} />
+      {section === 'someday' && (
+        <SomedayBox notes={boxed} open={open} onToggle={onToggleBox} onOpen={onOpen} />
+      )}
     </View>
   );
 }
@@ -253,6 +279,9 @@ const s = StyleSheet.create({
   rule: { height: 1, marginHorizontal: space.lg, marginBottom: space.xl },
   section: { marginBottom: space.xl, paddingHorizontal: space.lg },
   notes: { gap: 10, marginTop: space.md },
+  // An empty section still needs somewhere to aim at.
+  notesEmpty: { minHeight: 64, justifyContent: 'center' },
+  drop: { height: 3, borderRadius: 2, marginVertical: 1 },
   empty: { fontStyle: 'italic' },
   foot: { textAlign: 'center', paddingHorizontal: space.lg },
   notice: {

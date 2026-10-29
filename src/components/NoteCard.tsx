@@ -24,6 +24,9 @@ function NoteCardBase({
   fade = 1,
   onPress,
   onComplete,
+  onLongPress,
+  onPressOut,
+  suppressPress,
 }: {
   note: Note;
   index: number;
@@ -31,6 +34,10 @@ function NoteCardBase({
   fade?: number;
   onPress?: (note: Note) => void;
   onComplete?: (note: Note) => void;
+  onLongPress?: () => void;
+  onPressOut?: () => void;
+  /** True once a drag has taken over, so the release isn't read as a tap. */
+  suppressPress?: () => boolean;
 }) {
   const t = useTheme();
   const tilt = index % 2 === 0 ? '-0.35deg' : '0.35deg';
@@ -43,7 +50,17 @@ function NoteCardBase({
   return (
     <Pressable
       accessible
-      onPress={onPress ? () => onPress(note) : undefined}
+      onPress={
+        onPress
+          ? () => {
+              if (suppressPress?.()) return;
+              onPress(note);
+            }
+          : undefined
+      }
+      onLongPress={onLongPress}
+      onPressOut={onPressOut}
+      delayLongPress={450}
       accessibilityRole={onPress ? 'button' : 'text'}
       // Read aloud, a note should place itself without the listener having to
       // track which section heading came last.

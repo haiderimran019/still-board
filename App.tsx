@@ -40,6 +40,8 @@ export default function App() {
     complete,
     remove,
     remind,
+    reorder,
+    refuse,
   } = useBoard();
 
   if (bootError) return <BootFailed message={bootError} />;
@@ -60,6 +62,8 @@ export default function App() {
         onComplete={complete}
         onDelete={remove}
         onRemind={remind}
+        onReorder={reorder}
+        onRefused={refuse}
       />
     </SafeAreaProvider>
   );

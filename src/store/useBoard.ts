@@ -132,6 +132,21 @@ export function useBoard() {
     [notes, refresh, say]
   );
 
+  /** Where a drag ends up: section and position in one write. */
+  const reorder = useCallback(
+    async (id: string, section: Section, index: number) => {
+      if (section !== 'now') await reminders.cancel(id);
+      await repo.place(id, section, index);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  /** A drag that Now could not accept. Said once, quietly, then gone. */
+  const refuse = useCallback(() => {
+    say('Now is full. Finish or move something first.');
+  }, [say]);
+
   const nowNotes = useMemo(() => (notes ?? []).filter((n) => n.section === 'now'), [notes]);
 
   /** Recomputed on every refresh rather than stored, so it can't go stale at midnight. */
@@ -155,5 +170,7 @@ export function useBoard() {
     complete,
     remove,
     remind,
+    reorder,
+    refuse,
   };
 }
