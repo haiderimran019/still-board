@@ -142,3 +142,42 @@ Still nothing on a real phone, and this machine has no simulator to put one on.
 Bundling proves the app *builds* for a phone; it does not prove it *looks*
 right on one. Layout, the font rendering, the tilt, dark mode and the safe-area
 insets all need eyes on a device.
+
+## Step 4 — quick capture, and the one moment the app says no
+
+**The open question is answered the plan's way.** The brief asked that capture
+quietly default to Next once Now holds seven. The plan (§7) argued against it,
+and this step builds the plan's version: capture defaults to **Now**, and
+choosing Now when it is full turns the sheet around to show the seven notes
+already there, each with the three honest ways out — *Done*, *Next*, *Drop* —
+plus a quiet "Put it in Next instead" for when the user genuinely just wants
+the brief's behaviour. One tap resolves it either way.
+
+The reasoning: silently diverting to Next spares the user the one decision the
+whole product exists to force. They never learn Now is full, and Next becomes
+the drain. Reverting to the brief's behaviour, if this proves wrong on a real
+board, is a few lines in `CaptureSheet`.
+
+**Built**
+
+- `src/components/CaptureSheet.tsx` — writing a note, and the Now-is-full turn.
+- `src/store/useBoard.ts` — the board and every write to it. Screens read from
+  this hook and nothing above it touches the repository. Each action writes and
+  then re-reads, so the screen can't drift out of step with the database.
+- `repo.createInNowBySwapping()` — makes room and adds the new note **in one
+  transaction**. Without it a failure between the two writes could take a note
+  out of Now and not put one back, which is the one thing this app must never
+  do to someone.
+
+**Verified**
+
+- 21 tests, including four new ones on swapping: by completing, by moving to
+  Next, by deleting, and — the one that matters — that a swap which fails
+  partway leaves Now exactly as it was, nothing moved and nothing lost.
+- `tsc` clean; `expo export` bundles for iOS and Android.
+
+**Not verified**
+
+The sheet itself has never been on a screen. Keyboard behaviour, the sheet
+height with the keyboard up, and whether autofocus fires inside a modal on
+Android are all things only a device will tell us.

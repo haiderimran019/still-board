@@ -1,12 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CaptureSheet } from '../components/CaptureSheet';
 import { NoteCard } from '../components/NoteCard';
 import { NowGauge } from '../components/NowGauge';
 import { SectionHeading } from '../components/SectionHeading';
 import { APP_NAME, TAGLINE } from '../config';
+import type { FreeUp } from '../db/repository';
 import { SECTIONS, type Note, type Section } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
@@ -16,21 +18,21 @@ import { SECTION_COPY } from './sectionCopy';
 
 type Props = {
   notes: Note[];
+  nowNotes: Note[];
   doneCount: number;
-  /** Temporary, and only so the board can be filled while testing step 3. */
-  onAdd: () => void;
+  onCreate: (text: string, section: Section) => Promise<void>;
+  onSwap: (text: string, outgoingId: string, how: FreeUp) => Promise<void>;
 };
 
 /**
  * The whole board on one screen: Now, Next, Someday, in that order, always.
  *
- * Nothing on this screen is interactive yet beyond scrolling — capture lands
- * in step 4, tapping a note in step 5, completing it in step 6. What is being
- * checked here is that a real board, read from the database, is calm to look
- * at and legible at any length.
+ * The composer bar at the top is the only way in: tapping it opens the
+ * capture sheet. Tapping a note comes in step 5, completing it in step 6.
  */
-export function BoardScreen({ notes, doneCount, onAdd }: Props) {
+export function BoardScreen({ notes, nowNotes, doneCount, onCreate, onSwap }: Props) {
   const t = useTheme();
+  const [capturing, setCapturing] = useState(false);
   const bySection = (s: Section) => notes.filter((n) => n.section === s);
 
   return (
@@ -56,16 +58,16 @@ export function BoardScreen({ notes, doneCount, onAdd }: Props) {
         </View>
 
         <Pressable
-          onPress={onAdd}
+          onPress={() => setCapturing(true)}
           accessibilityRole="button"
-          accessibilityLabel="Add a note to Next"
+          accessibilityLabel="Write a note"
           style={({ pressed }) => [
             s.composer,
             t.shadow,
             { backgroundColor: t.c.surface, borderColor: t.c.rule, opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Text style={[type.body, { color: t.c.inkFaint }]}>Add a note to Next</Text>
+          <Text style={[type.body, { color: t.c.inkFaint }]}>What's on your mind?</Text>
           <View style={[s.plus, { backgroundColor: t.c.accent }]}>
             <Text style={{ color: t.c.board, fontSize: 19, lineHeight: 22 }}>+</Text>
           </View>
@@ -95,9 +97,17 @@ export function BoardScreen({ notes, doneCount, onAdd }: Props) {
         })}
 
         <Text style={[type.caption, s.foot, { color: t.c.inkFaint }]}>
-          Step 3 · the board, read from the database. The + button is a stand-in until step 4.
+          Step 4 · tap the bar at the top to write a note. Fill Now to seven and try again.
         </Text>
       </ScrollView>
+
+      <CaptureSheet
+        visible={capturing}
+        nowNotes={nowNotes}
+        onClose={() => setCapturing(false)}
+        onCreate={onCreate}
+        onSwap={onSwap}
+      />
     </SafeAreaView>
   );
 }

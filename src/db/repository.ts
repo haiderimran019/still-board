@@ -195,6 +195,37 @@ export async function remove(noteId: string): Promise<void> {
   await d.runAsync('DELETE FROM notes WHERE id = ?', [noteId]);
 }
 
+/**
+ * How a note leaves Now to make room for another one. These are the only three
+ * honest answers to a full Now: it's finished, it isn't really today's, or it
+ * shouldn't have been written down at all.
+ */
+export type FreeUp = 'complete' | 'move' | 'delete';
+
+/**
+ * Makes room in Now and adds the new note, as one unit of work.
+ *
+ * The transaction matters: without it, a failure between the two writes could
+ * remove a note from Now and not replace it, which is the one thing a board
+ * like this must never do to someone.
+ */
+export async function createInNowBySwapping(
+  text: string,
+  outgoingId: string,
+  how: FreeUp
+): Promise<Note> {
+  const d = await db();
+  let created: Note | null = null;
+  await d.withTransactionAsync(async () => {
+    if (how === 'complete') await complete(outgoingId);
+    else if (how === 'move') await moveToEnd(outgoingId, 'next');
+    else await remove(outgoingId);
+    created = await create(text, 'now');
+  });
+  // The transaction either ran the body or threw, so this is set by here.
+  return created as unknown as Note;
+}
+
 // ---------- first run ----------
 
 const SEED: Array<[string, Section]> = [

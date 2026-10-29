@@ -132,6 +132,47 @@ try {
     assert.equal(new Set(positions).size, positions.length, 'positions must stay distinct');
   });
 
+  await test('swapping into a full Now by completing the outgoing note', async () => {
+    await repo.__resetAll();
+    for (let i = 0; i < 7; i++) await repo.create(`Now ${i}`, 'now');
+    const out = (await repo.listBoard())[0];
+    const made = await repo.createInNowBySwapping('The new one', out.id, 'complete');
+    await relaunch();
+    assert.equal(await repo.countIn('now'), 7, 'Now stays at its limit');
+    assert.ok((await repo.listDone()).some((n) => n.id === out.id));
+    assert.ok((await repo.listBoard()).some((n) => n.id === made.id));
+  });
+
+  await test('swapping by moving the outgoing note to Next', async () => {
+    const out = (await repo.listBoard()).filter((n) => n.section === 'now')[0];
+    await repo.createInNowBySwapping('Another new one', out.id, 'move');
+    await relaunch();
+    assert.equal(await repo.countIn('now'), 7);
+    const next = (await repo.listBoard()).filter((n) => n.section === 'next');
+    assert.equal(next[next.length - 1].id, out.id, 'the outgoing note lands at the end of Next');
+  });
+
+  await test('swapping by deleting the outgoing note', async () => {
+    const out = (await repo.listBoard()).filter((n) => n.section === 'now')[0];
+    await repo.createInNowBySwapping('A third new one', out.id, 'delete');
+    await relaunch();
+    assert.equal(await repo.countIn('now'), 7);
+    assert.ok(!(await repo.listBoard()).some((n) => n.id === out.id));
+    assert.ok(!(await repo.listDone()).some((n) => n.id === out.id));
+  });
+
+  await test('a failed swap leaves Now exactly as it was', async () => {
+    const before = (await repo.listBoard()).filter((n) => n.section === 'now').map((n) => n.id);
+    await assert.rejects(
+      // A text of the wrong type makes the INSERT fail after the outgoing note
+      // has already been moved — exactly the half-done case the transaction exists for.
+      repo.createInNowBySwapping({} as unknown as string, before[0], 'move')
+    );
+    await relaunch();
+    const after = (await repo.listBoard()).filter((n) => n.section === 'now').map((n) => n.id);
+    assert.deepEqual(after, before, 'nothing moved, nothing lost');
+  });
+
   console.log(`\n${passed} repository tests passed (real SQLite, reopened from disk)`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
