@@ -38,7 +38,6 @@ export function BackupSheet({
   onImport: (notes: Note[]) => Promise<number>;
 }) {
   const t = useTheme();
-  const google = useGoogleAccount();
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<string | null>(null);
 
@@ -77,22 +76,6 @@ export function BackupSheet({
       const text = await local.readFromFile();
       if (text === null) return 'Nothing chosen.';
       return restoreFrom(text);
-    });
-
-  const toDrive = () =>
-    run(async () => {
-      if (!google.token) return 'Sign in first.';
-      const r = await drive.upload(google.token, await json());
-      return r.ok ? 'Backed up to your Drive.' : r.reason;
-    });
-
-  const fromDrive = () =>
-    run(async () => {
-      if (!google.token) return 'Sign in first.';
-      const r = await drive.download(google.token);
-      if (!r.ok) return r.reason;
-      if (r.value === null) return 'There is no backup in your Drive yet.';
-      return restoreFrom(r.value);
     });
 
   const Button = ({
@@ -158,44 +141,16 @@ export function BackupSheet({
           <Button label="Restore from a file" hint="Pick a backup you saved" onPress={openFile} />
 
           <Text style={[type.section, s.group, { color: t.c.ink }]}>Google Drive</Text>
-          {!googleConfigured() ? (
+          {/* Rendered as a separate component, and only when there are client
+              IDs to use. The auth hook throws outright on a platform with no
+              ID configured, so it must not run at all until one exists. */}
+          {googleConfigured() ? (
+            <GoogleBackup busy={busy} json={json} restoreFrom={restoreFrom} run={run} Button={Button} />
+          ) : (
             <Text style={[type.caption, s.blurb, { color: t.c.inkFaint }]}>
               Not set up yet. It needs Google OAuth client IDs in src/config.ts —
               see docs/12-google-signin.md. Saving to a file works without it.
             </Text>
-          ) : (
-            <>
-              <Text style={[type.caption, s.blurb, { color: t.c.inkSoft }]}>
-                Kept in a private folder only this app can see. It can't read anything
-                else in your Drive.
-              </Text>
-              {google.account ? (
-                <>
-                  <Text style={[type.label, s.who, { color: t.c.inkSoft }]}>
-                    Signed in as {google.account.email}
-                  </Text>
-                  <Button label="Back up now" onPress={toDrive} />
-                  <Button label="Restore from Drive" onPress={fromDrive} />
-                  <Pressable
-                    onPress={google.signOut}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [s.quiet, { opacity: pressed ? 0.5 : 1 }]}
-                  >
-                    <Text style={[type.caption, { color: t.c.inkFaint }]}>Sign out</Text>
-                  </Pressable>
-                </>
-              ) : (
-                <Button
-                  label="Sign in with Google"
-                  hint="Only to reach this app's own backup folder"
-                  onPress={() => void google.signIn()}
-                  disabled={!google.ready || google.busy}
-                />
-              )}
-              {google.error && (
-                <Text style={[type.caption, s.blurb, { color: t.c.warn }]}>{google.error}</Text>
-              )}
-            </>
           )}
 
           {(busy || said) && (
@@ -207,6 +162,84 @@ export function BackupSheet({
         </ScrollView>
       </SafeAreaView>
     </Modal>
+  );
+}
+
+/**
+ * The Google half. Separated out so that `useGoogleAccount` — which throws
+ * on a platform with no client ID configured — is never mounted until the
+ * app actually has one.
+ */
+function GoogleBackup({
+  busy,
+  json,
+  restoreFrom,
+  run,
+  Button,
+}: {
+  busy: boolean;
+  json: () => Promise<string>;
+  restoreFrom: (text: string) => Promise<string>;
+  run: (job: () => Promise<string>) => Promise<void>;
+  Button: (p: {
+    label: string;
+    hint?: string;
+    onPress: () => void;
+    disabled?: boolean;
+  }) => React.ReactElement;
+}) {
+  const t = useTheme();
+  const google = useGoogleAccount();
+
+  const toDrive = () =>
+    void run(async () => {
+      if (!google.token) return 'Sign in first.';
+      const r = await drive.upload(google.token, await json());
+      return r.ok ? 'Backed up to your Drive.' : r.reason;
+    });
+
+  const fromDrive = () =>
+    void run(async () => {
+      if (!google.token) return 'Sign in first.';
+      const r = await drive.download(google.token);
+      if (!r.ok) return r.reason;
+      if (r.value === null) return 'There is no backup in your Drive yet.';
+      return restoreFrom(r.value);
+    });
+
+  return (
+    <>
+      <Text style={[type.caption, s.blurb, { color: t.c.inkSoft }]}>
+        Kept in a private folder only this app can see. It can't read anything else in
+        your Drive.
+      </Text>
+      {google.account ? (
+        <>
+          <Text style={[type.label, s.who, { color: t.c.inkSoft }]}>
+            Signed in as {google.account.email}
+          </Text>
+          <Button label="Back up now" onPress={toDrive} />
+          <Button label="Restore from Drive" onPress={fromDrive} />
+          <Pressable
+            onPress={google.signOut}
+            accessibilityRole="button"
+            style={({ pressed }) => [s.quiet, { opacity: pressed ? 0.5 : 1 }]}
+          >
+            <Text style={[type.caption, { color: t.c.inkFaint }]}>Sign out</Text>
+          </Pressable>
+        </>
+      ) : (
+        <Button
+          label="Sign in with Google"
+          hint="Only to reach this app's own backup folder"
+          onPress={() => void google.signIn()}
+          disabled={!google.ready || google.busy || busy}
+        />
+      )}
+      {google.error && (
+        <Text style={[type.caption, s.blurb, { color: t.c.warn }]}>{google.error}</Text>
+      )}
+    </>
   );
 }
 
