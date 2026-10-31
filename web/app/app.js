@@ -14,18 +14,21 @@
   let notes = [];
   let selectedFilter = 'all';
   let editingId = null;
+  let editingOriginal = null;
   let showingDone = false;
   let toastTimer = null;
   let undo = null;
 
+  function readStored(raw) {
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed) || !parsed.every(validNote)) throw new Error('invalid');
+    return parsed;
+  }
+
   function load() {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || !parsed.every(validNote)) throw new Error('invalid');
-      notes = parsed;
-    } catch (_) {
+      notes = readStored(localStorage.getItem(KEY));
+    } catch {
       message('Saved notes could not be read. Your browser data was left untouched.');
     }
   }
@@ -34,13 +37,26 @@
     try {
       localStorage.setItem(KEY, JSON.stringify(notes));
       return true;
-    } catch (_) {
+    } catch {
       message('This browser could not save the change. Check available storage or browser settings.');
       return false;
     }
   }
 
   function commit(next, notice, previous) {
+    // A second tab may have saved since this tab last read the board.
+    try {
+      const current = readStored(localStorage.getItem(KEY));
+      if (JSON.stringify(current) !== JSON.stringify(notes)) {
+        notes = current;
+        render();
+        message('The board changed in another tab. Review it and try again.');
+        return false;
+      }
+    } catch {
+      message('Saved notes could not be checked, so nothing was changed.');
+      return false;
+    }
     const before = notes;
     notes = next;
     if (!save()) { notes = before; return false; }
@@ -59,6 +75,10 @@
 
   function message(text, undoAction) {
     const toast = $('toast');
+    if ($('note-dialog').open) {
+      $('dialog-notice').textContent = text;
+      $('dialog-notice').hidden = false;
+    }
     clearTimeout(toastTimer);
     toast.replaceChildren(document.createTextNode(text));
     undo = undoAction;
@@ -184,6 +204,7 @@
   function openDialog(id = null, section = 'now') {
     const note = notes.find((n) => n.id === id);
     editingId = id;
+    editingOriginal = note ? JSON.stringify(note) : null;
     $('dialog-title').textContent = note ? 'Your note' : 'Write a note';
     $('note-text').value = note ? note.text : '';
     $('save-note').textContent = note ? 'Save note' : 'Add note';
@@ -203,11 +224,12 @@
       label.prepend(input); $('priority-options').append(label);
     }
     $('limit-message').hidden = true;
+    $('dialog-notice').hidden = true;
     $('note-dialog').showModal();
     $('note-text').focus();
   }
 
-  function closeDialog() { $('note-dialog').close(); editingId = null; }
+  function closeDialog() { $('note-dialog').close(); editingId = null; editingOriginal = null; }
   function selected(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value; }
   function saveDialog(event) {
     event.preventDefault();
@@ -218,6 +240,10 @@
     const now = Date.now();
     if (editingId) {
       const prior = notes.find((n) => n.id === editingId);
+      if (!prior || JSON.stringify(prior) !== editingOriginal) {
+        message('This note changed in another tab. Close and reopen it before editing.');
+        return;
+      }
       const nextPosition = prior.section === section ? prior.position : Math.max(0, ...sorted(section).map((n) => n.position)) + 1000;
       const updated = { ...prior, text, section, position: nextPosition, priority: Number(selected('priority')), remindAt: section === 'now' ? prior.remindAt : null, updatedAt: now };
       if (!commit(notes.map((n) => n.id === editingId ? updated : n), 'Saved.')) return;
@@ -240,6 +266,11 @@
     commit(notes.map((n) => n.id === id ? { ...n, completedAt: null, updatedAt: Date.now() } : n), 'Back on the board.', before);
   }
   function remove(id) {
+    const current = notes.find((n) => n.id === id);
+    if (!current || JSON.stringify(current) !== editingOriginal) {
+      message('This note changed in another tab. Close and reopen it before dropping it.');
+      return;
+    }
     const before = notes.slice();
     if (commit(notes.filter((n) => n.id !== id), 'Dropped.', before)) closeDialog();
   }
@@ -273,7 +304,7 @@
 
   function theme() {
     let saved = null;
-    try { saved = localStorage.getItem(THEME_KEY); } catch (_) {}
+    try { saved = localStorage.getItem(THEME_KEY); } catch {}
     if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
     const dark = document.documentElement.dataset.theme === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
     $('theme-toggle').textContent = dark ? 'Light' : 'Dark';
@@ -285,7 +316,7 @@
   $('theme-toggle').addEventListener('click', () => {
     const dark = $('theme-toggle').textContent === 'Light';
     document.documentElement.dataset.theme = dark ? 'light' : 'dark';
-    try { localStorage.setItem(THEME_KEY, document.documentElement.dataset.theme); } catch (_) {}
+    try { localStorage.setItem(THEME_KEY, document.documentElement.dataset.theme); } catch {}
     theme();
   });
   $('menu-toggle').addEventListener('click', () => { $('menu').hidden = !$('menu').hidden; $('menu-toggle').setAttribute('aria-expanded', String(!$('menu').hidden)); });
@@ -297,7 +328,17 @@
   $('delete-note').addEventListener('click', () => remove(editingId));
   document.querySelectorAll('.filter').forEach((button) => button.addEventListener('click', () => { selectedFilter = button.dataset.filter; render(); }));
   document.querySelectorAll('.choice-row').forEach((row) => row.addEventListener('change', () => row.querySelectorAll('.choice').forEach((label) => label.classList.toggle('selected', label.querySelector('input').checked))));
-  $('note-dialog').addEventListener('close', () => { editingId = null; });
+  $('note-dialog').addEventListener('close', () => { editingId = null; editingOriginal = null; });
+  window.addEventListener('storage', (event) => {
+    if (event.key !== KEY) return;
+    try {
+      notes = readStored(event.newValue);
+      render();
+      message('Board updated in another tab.');
+    } catch {
+      message('Another tab saved unreadable notes. This board was left as it was.');
+    }
+  });
 
   load(); theme(); render();
 })();
