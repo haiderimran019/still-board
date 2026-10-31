@@ -23,6 +23,8 @@ seven notes.
 
 **The app** lives at the repo root (Expo + TypeScript). `npm install`, then `npx expo start`.
 
+**Web board:** open `web/app/index.html`, or visit [the live browser app](https://haiderimran019.github.io/still-board/app/). It stores notes in this browser's local storage. Use Download backup and Import backup to move notes between devices or the mobile app; browser notes do not sync with the mobile SQLite database or Google Drive. The web files in `web/` are published to GitHub Pages on pushes to `main`.
+
 **Web prototype:** [prototypes/board.html](prototypes/board.html) — the interaction, proven, Sprint 1.
 
 **Decided:** [directions.html](prototypes/directions.html) — the three identities C1 chose between. B won.

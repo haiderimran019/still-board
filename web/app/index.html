@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fdf7ec">
+  <meta name="description" content="A calm, private board for what you're carrying. Now, Next, Next week, Someday.">
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <title>still. — Your board</title>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <a class="wordmark" href="../">still.</a>
+        <p id="subtitle">A little room to think.</p>
+      </div>
+      <div class="top-actions">
+        <button id="done-toggle" class="quiet-button" type="button">Done <span id="done-count"></span></button>
+        <button id="theme-toggle" class="quiet-button" type="button" aria-label="Switch theme">Dark</button>
+        <button id="menu-toggle" class="quiet-button" type="button" aria-expanded="false" aria-controls="menu">••• <span class="sr-only">Board menu</span></button>
+      </div>
+    </header>
+
+    <div id="menu" class="menu" hidden>
+      <p>Your notes stay in this browser on this device. Export a copy before clearing browser data or moving devices.</p>
+      <div class="menu-actions">
+        <button id="export" type="button">Download backup</button>
+        <button id="import" type="button">Import backup</button>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+
+    <main id="main">
+      <div class="intro">
+        <h1>Your board</h1>
+        <p>One place for everything you're carrying.</p>
+      </div>
+
+      <button id="add-note" class="composer" type="button"><span>What's on your mind?</span><span class="plus" aria-hidden="true">+</span></button>
+
+      <nav class="filters" aria-label="Filter notes by when they were added">
+        <button class="filter active" data-filter="all" type="button" aria-pressed="true">All</button>
+        <button class="filter" data-filter="today" type="button" aria-pressed="false">Today</button>
+        <button class="filter" data-filter="week" type="button" aria-pressed="false">This week</button>
+        <button class="filter" data-filter="older" type="button" aria-pressed="false">Older</button>
+      </nav>
+      <p id="filter-note" class="filter-note" hidden>Showing part of the board. Choose All to see every note.</p>
+
+      <div id="board" class="board"></div>
+      <section id="done-view" class="done-view" hidden>
+        <div class="section-heading"><div><h2>Done</h2><p>What you cleared in the last 30 days</p></div></div>
+        <div id="done-list"></div>
+      </section>
+    </main>
+    <footer>Only on this device · <a href="../privacy.html">Privacy</a> · <a href="../">About still.</a></footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="note-dialog" aria-labelledby="dialog-title">
+    <form id="note-form" method="dialog">
+      <div class="dialog-head"><h2 id="dialog-title">Write a note</h2><button id="close-dialog" class="icon-button" type="button" aria-label="Close">×</button></div>
+      <label for="note-text">Your note</label>
+      <textarea id="note-text" maxlength="280" rows="4" required placeholder="Write what you need to remember"></textarea>
+      <span class="hint">A thought is enough. You can change it later.</span>
+      <fieldset><legend>Put it in</legend><div id="section-options" class="choice-row"></div></fieldset>
+      <div id="priority-wrap" hidden><fieldset><legend>How urgent</legend><div id="priority-options" class="choice-row"></div></fieldset></div>
+      <div id="limit-message" class="limit-message" hidden><strong>Now is full.</strong> Finish or move a note first, or choose another place.</div>
+      <div class="dialog-actions"><button id="delete-note" class="danger-button" type="button" hidden>Drop note</button><button id="save-note" class="primary-button" type="submit">Add note</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

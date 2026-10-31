@@ -239,10 +239,10 @@ footer{border-top:1px solid var(--rule);padding:30px 0 0;color:var(--ink-soft);f
       <strong>Now holds seven.</strong> That's the whole idea.
     </p>
     <div class="cta">
-      <a class="btn btn-main" href="#get">Get it</a>
+      <a class="btn btn-main" href="./app/">Open your board</a>
       <a class="btn btn-ghost" href="#limit">Push against the limit</a>
     </div>
-    <p class="small">Android and iPhone · works with no signal · sign in only if you want to</p>
+    <p class="small">Use it in your browser now · notes stay on this device</p>
   </div>
 
   <div class="phone" aria-label="The app: a board with four sections">
@@ -370,17 +370,16 @@ footer{border-top:1px solid var(--rule);padding:30px 0 0;color:var(--ink-soft);f
 
 <section id="get" class="reveal">
   <p class="kicker">Getting it</p>
-  <h3>Heading for the Play Store.</h3>
+  <h3>Start in your browser.</h3>
   <p class="section-lede">
-    Being built in the open, starting with students at one university in Pakistan. The
-    Android build is being prepared for release now; iPhone follows. The code is all
-    there in the meantime, and you can run it on your own phone today with Expo.
+    Your board is ready on the web. Notes stay in this browser, and you can download a backup
+    to move them to another device. The Android and iPhone app is still being prepared for release.
   </p>
   <div class="cta">
-    <a class="btn btn-main" id="repo" href="https://github.com/">See the code</a>
-    <a class="btn btn-ghost" id="issues" href="https://github.com/">Ask for something</a>
+    <a class="btn btn-main" href="./app/">Open your board</a>
+    <a class="btn btn-ghost" id="repo" href="https://github.com/haiderimran019/still-board">See the code</a>
   </div>
-  <p class="small">React Native · Expo · SQLite · 102 tests, run against real SQLite rather than a mock.</p>
+  <p class="small">The web board runs in your browser. The mobile app is built with React Native, Expo, and SQLite.</p>
 </section>
 
 <footer>
@@ -422,7 +421,6 @@ footer{border-top:1px solid var(--rule);padding:30px 0 0;color:var(--ink-soft);f
     if (user && repo) {
       var base = 'https://github.com/' + user + '/' + repo;
       document.getElementById('repo').href = base;
-      document.getElementById('issues').href = base + '/issues/new';
     }
   }
 
