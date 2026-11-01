@@ -132,7 +132,7 @@ function NoteCardBase({
         s.note,
         t.shadow,
         {
-          backgroundColor: wash ?? t.c.notes[note.tint % t.c.notes.length],
+          backgroundColor: wash ?? t.c.surface,
           borderColor: urgent ?? t.c.noteEdge,
           borderWidth: urgent ? 1.5 : 1,
           opacity: Animated.multiply(

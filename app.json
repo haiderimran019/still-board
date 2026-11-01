@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#fdf7ec",
+        "backgroundColor": "#fbf9f6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -37,7 +37,7 @@
       [
         "expo-notifications",
         {
-          "color": "#6e5220",
+          "color": "#795c91",
           "defaultChannel": "default"
         }
       ],
@@ -45,16 +45,16 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "backgroundColor": "#fdf7ec",
+          "backgroundColor": "#fbf9f6",
           "imageWidth": 180,
           "dark": {
-            "backgroundColor": "#1a1713"
+            "backgroundColor": "#19171c"
           }
         }
       ]
     ],
     "description": "A calm board for everything you're carrying. Now, Next, Next week, Someday \u2014 and a hard limit of seven things today.",
-    "primaryColor": "#6e5220",
-    "backgroundColor": "#fdf7ec"
+    "primaryColor": "#795c91",
+    "backgroundColor": "#fbf9f6"
   }
 }

@@ -1,14 +1,13 @@
 /**
- * Direction B, pulled back. Ported from the web prototype, where the contrast
- * ratios below were measured rather than guessed — every text colour clears
- * 4.5:1 against the surface it sits on, in both themes.
+ * Soft paper, pastel lanes, and white cards. The interface and browser board
+ * share these values so the product keeps one visual language across screens.
  *
  * See docs/07-design-tokens.md for the reasoning and the measurements.
  */
 
 export type Palette = {
   board: string;        // the board surface
-  line: string;         // the faint grid on it
+  line: string;         // quiet dividers
   surface: string;      // composer, sheets, anything raised
   ink: string;          // primary text
   inkSoft: string;      // secondary text
@@ -16,6 +15,7 @@ export type Palette = {
   rule: string;         // hairlines and borders
   accent: string;       // buttons, focus, the Now gauge
   warn: string;         // Now at its limit — never the only signal
+  lanes: [string, string, string];
   notes: [string, string, string, string];  // yellow, mint, lilac, peach
   noteEdge: string;
   /** Urgency 1, 2, 3 — green, amber, red. Index 0 has no colour by design. */
@@ -25,15 +25,16 @@ export type Palette = {
 };
 
 export const light: Palette = {
-  board: '#fdf7ec',
-  line: '#f3e8d6',
-  surface: '#fffdf8',
-  ink: '#3a3026',
-  inkSoft: '#6b5f4c',
-  inkFaint: '#7c6e58',
-  rule: '#ece0cd',
-  accent: '#6e5220',
-  warn: '#9c5d12',
+  board: '#fbf9f6',
+  line: '#f1eeeb',
+  surface: '#ffffff',
+  ink: '#48454d',
+  inkSoft: '#746f78',
+  inkFaint: '#77727b',
+  rule: '#ebe7e7',
+  accent: '#795c91',
+  warn: '#9c5d42',
+  lanes: ['#fff5f0', '#f8f6f3', '#f4f6f1'],
   notes: ['#ffeba3', '#cdeed6', '#ded8f2', '#ffd4c2'],
   noteEdge: 'rgba(58,48,38,0.12)',
   // Chosen to clear 3:1 against every one of the four note colours above,
@@ -43,20 +44,21 @@ export const light: Palette = {
   // says nothing. These are washes at roughly the weight of the stationery
   // colours, so ink stays at 7:1 and an urgent note reads as urgent without
   // taking the room over.
-  urgencyFill: ['#d7eedd', '#ffe6b4', '#ffd5cd'],
+  urgencyFill: ['#e6f0e7', '#fff0d4', '#f9e3df'],
 };
 
-/** Designed, not inverted: the same four stationery hues taken down to night. */
+/** A separate night palette, with the same muted lavender accent. */
 export const dark: Palette = {
-  board: '#1a1713',
-  line: '#241f19',
-  surface: '#241f19',
-  ink: '#f2eae0',
-  inkSoft: '#b5a897',
-  inkFaint: '#8d8273',
-  rule: '#302922',
-  accent: '#e8c892',
-  warn: '#e8a74e',
+  board: '#19171c',
+  line: '#26232a',
+  surface: '#252229',
+  ink: '#f1edf3',
+  inkSoft: '#c0b9c5',
+  inkFaint: '#a69eab',
+  rule: '#39343d',
+  accent: '#c4a8d7',
+  warn: '#e7aa8b',
+  lanes: ['#2d2427', '#252329', '#242923'],
   notes: ['#4a3f1e', '#2d4031', '#37314f', '#4a3328'],
   noteEdge: 'rgba(0,0,0,0.4)',
   urgency: ['#6fd39b', '#e8c04e', '#ff8a7a'],
@@ -66,11 +68,11 @@ export const dark: Palette = {
 /** Shadows differ per theme: on cream a solid drop-edge reads as paper; on near-black it doesn't. */
 export const elevation = {
   light: {
-    shadowColor: '#3a3026',
-    shadowOpacity: 0.16,
+    shadowColor: '#48454d',
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   dark: {
     shadowColor: '#000000',
@@ -81,7 +83,7 @@ export const elevation = {
   },
 } as const;
 
-export const radius = { note: 12, card: 15, sheet: 22, pill: 999 } as const;
+export const radius = { note: 14, card: 15, sheet: 22, pill: 999 } as const;
 
 /** 8pt spacing scale. Anything that isn't on it needs a reason. */
 export const space = { xs: 4, sm: 8, md: 12, lg: 18, xl: 26, xxl: 40 } as const;

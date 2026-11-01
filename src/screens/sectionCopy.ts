@@ -8,13 +8,13 @@ import type { Section } from '../db/schema';
 export const SECTION_COPY: Record<Section, { name: string; sub: string; empty: string }> = {
   now: {
     name: 'Now',
-    sub: "what you're carrying today",
-    empty: 'Nothing here yet. What actually deserves today?',
+    sub: 'Just today. The rest can wait.',
+    empty: 'A little space for what matters.',
   },
   next: {
     name: 'Next',
-    sub: 'soon, but not today',
-    empty: "Empty — and that's fine.",
+    sub: 'Soon, but not all at once.',
+    empty: "Nothing waiting right now. That's fine.",
   },
   nextweek: {
     name: 'Next week',
@@ -23,7 +23,7 @@ export const SECTION_COPY: Record<Section, { name: string; sub: string; empty: s
   },
   someday: {
     name: 'Someday',
-    sub: 'no pressure to act',
-    empty: 'Room for the things that can wait.',
+    sub: 'A soft landing for your maybes.',
+    empty: 'Good things can take their sweet time.',
   },
 };

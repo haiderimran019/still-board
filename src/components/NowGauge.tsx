@@ -40,7 +40,7 @@ export function NowGauge({ count }: { count: number }) {
 }
 
 const s = StyleSheet.create({
-  pips: { flexDirection: 'row', gap: 3, paddingTop: 9 },
-  pip: { height: 3, flex: 1, borderRadius: 2 },
+  pips: { flexDirection: 'row', gap: 5, paddingTop: 9 },
+  pip: { width: 14, height: 14, borderRadius: 7 },
   word: { paddingTop: 7 },
 });

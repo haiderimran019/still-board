@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,7 +28,7 @@ import { headerLine, somedayFade, splitSomeday } from '../board/whispers';
 import type { Notice } from '../store/useBoard';
 import { APP_NAME, NOW_LIMIT } from '../config';
 import type { FreeUp } from '../db/repository';
-import { SECTIONS, type Note, type Priority, type Section } from '../db/schema';
+import { type Note, type Priority, type Section } from '../db/schema';
 import { MIN_TAP, radius, space } from '../theme/tokens';
 import { type } from '../theme/typography';
 import { useTheme } from '../theme/useTheme';
@@ -59,7 +60,8 @@ type Props = {
 };
 
 /**
- * The whole board on one screen: Now, Next, Someday, in that order, always.
+ * The board always reads Now, Next, Someday. Next week stays distinct inside
+ * the Next lane, keeping the three-column layout without hiding existing work.
  *
  * The composer bar at the top is the only way in: tapping it opens the
  * capture sheet. Tapping a note comes in step 5, completing it in step 6.
@@ -87,6 +89,8 @@ export function BoardScreen({
   onImport,
 }: Props) {
   const t = useTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   const [capturing, setCapturing] = useState(false);
   const [boxOpen, setBoxOpen] = useState(false);
   const [opened, setOpened] = useState<Note | null>(null);
@@ -128,12 +132,22 @@ export function BoardScreen({
       >
         <View style={s.head}>
           <View style={s.headText}>
+            <Text style={[type.caption, s.date, { color: t.c.accent }]}>
+              {now.toLocaleDateString(undefined, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </Text>
             {/* Text scales with the phone's setting everywhere on this
                 board except here: at 200% the wordmark alone would fill the
                 screen, and it is the one piece of text nobody needs to read
                 twice. */}
             <Text style={[type.wordmark, { color: t.c.ink }]} maxFontSizeMultiplier={1.4}>
               {APP_NAME}
+            </Text>
+            <Text style={[type.section, s.headline, { color: t.c.ink }]}>
+              A little less on your mind.
             </Text>
             <Text style={[type.caption, { color: t.c.inkSoft }]}>{subtitle}</Text>
           </View>
@@ -221,31 +235,68 @@ export function BoardScreen({
           </Text>
         )}
 
-        {SECTIONS.map((section, sectionIndex) => {
-          const items = bySection(section);
-          return (
-            <Fragment key={section}>
-              {sectionIndex > 0 && <View style={[s.rule, { backgroundColor: t.c.line }]} />}
-              <View style={s.section}>
-                <SectionHeading section={section} count={items.length} />
-                {section === 'now' && <NowGauge count={items.length} />}
+        <View style={[s.columns, wide ? s.columnsWide : s.columnsNarrow]}>
+          {(['now', 'next', 'someday'] as const).map((section, columnIndex) => {
+            const items = bySection(section);
+            const nextWeekItems = section === 'next' ? bySection('nextweek') : [];
+            const count = items.length + nextWeekItems.length;
+            return (
+              <View
+                key={section}
+                style={[
+                  s.column,
+                  { backgroundColor: t.c.lanes[columnIndex], borderColor: t.c.rule },
+                ]}
+              >
+                <View style={s.section}>
+                  <SectionHeading section={section} count={section === 'next' ? count : items.length} />
+                  {section === 'now' && <NowGauge count={items.length} />}
 
-                <SectionNotes
-                  section={section}
-                  items={items}
-                  open={boxOpen}
-                  onToggleBox={() => setBoxOpen((v) => !v)}
-                  onOpen={setOpened}
-                  onComplete={(n) => onComplete(n.id)}
-                  onDrop={(n) => void onDelete(n.id)}
-                  onMoveTo={(n, to) => void onMove(n.id, to)}
-                  onReorder={(n, i) => void onReorder(n.id, n.section, i)}
-                />
+                  <SectionNotes
+                    section={section}
+                    items={items}
+                    open={boxOpen}
+                    onToggleBox={() => setBoxOpen((v) => !v)}
+                    onOpen={setOpened}
+                    onComplete={(n) => onComplete(n.id)}
+                    onDrop={(n) => void onDelete(n.id)}
+                    onMoveTo={(n, to) => void onMove(n.id, to)}
+                    onReorder={(n, i) => void onReorder(n.id, n.section, i)}
+                  />
+                  {section === 'next' && (
+                    <>
+                      <View style={[s.subsectionRule, { backgroundColor: t.c.rule }]} />
+                      <View style={s.subheading}>
+                        <Text
+                          accessibilityRole="header"
+                          style={[type.label, { color: t.c.inkSoft }]}
+                        >
+                          Next week
+                        </Text>
+                        {nextWeekItems.length > 0 && (
+                          <Text style={[type.caption, { color: t.c.inkFaint }]}>
+                            {nextWeekItems.length}
+                          </Text>
+                        )}
+                      </View>
+                      <SectionNotes
+                        section="nextweek"
+                        items={nextWeekItems}
+                        open={boxOpen}
+                        onToggleBox={() => setBoxOpen((v) => !v)}
+                        onOpen={setOpened}
+                        onComplete={(n) => onComplete(n.id)}
+                        onDrop={(n) => void onDelete(n.id)}
+                        onMoveTo={(n, to) => void onMove(n.id, to)}
+                        onReorder={(n, i) => void onReorder(n.id, n.section, i)}
+                      />
+                    </>
+                  )}
+                </View>
               </View>
-            </Fragment>
-          );
-        })}
-
+            );
+          })}
+        </View>
 
       </ScrollView>
 
@@ -429,6 +480,8 @@ const s = StyleSheet.create({
     paddingTop: space.md,
   },
   headText: { flex: 1 },
+  date: { textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 3 },
+  headline: { fontSize: 27, letterSpacing: -0.5, marginTop: 2, marginBottom: 2 },
   more: {
     borderWidth: 1,
     borderRadius: radius.pill,
@@ -460,8 +513,25 @@ const s = StyleSheet.create({
     minHeight: MIN_TAP,
   },
   plus: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  rule: { height: 1, marginHorizontal: space.lg, marginBottom: space.xl },
-  section: { marginBottom: space.xl, paddingHorizontal: space.lg },
+  columns: { gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.xl },
+  columnsWide: { flexDirection: 'row', alignItems: 'stretch' },
+  columnsNarrow: { flexDirection: 'column' },
+  column: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: space.md,
+    marginBottom: space.md,
+  },
+  section: { flex: 1 },
+  subsectionRule: { height: 1, marginTop: space.xl, marginBottom: space.md },
+  subheading: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: space.sm,
+  },
   notes: { gap: 10, marginTop: space.md },
   // An empty section still needs somewhere to aim at.
   notesEmpty: { minHeight: 64, justifyContent: 'center' },

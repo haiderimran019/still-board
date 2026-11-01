@@ -4,10 +4,15 @@
   const KEY = 'still-board-web-v1';
   const THEME_KEY = 'still-board-theme';
   const SECTIONS = [
-    { key: 'now', name: 'Now', sub: "what you're carrying today", empty: 'Nothing here yet. What actually deserves today?' },
-    { key: 'next', name: 'Next', sub: 'soon, but not today', empty: "Empty — and that's fine." },
+    { key: 'now', name: 'Now', sub: 'Just today. The rest can wait.', empty: 'A little space for what matters.' },
+    { key: 'next', name: 'Next', sub: 'Soon, but not all at once.', empty: "Nothing waiting right now. That's fine." },
     { key: 'nextweek', name: 'Next week', sub: 'the week ahead', empty: 'Nothing waiting for next week.' },
-    { key: 'someday', name: 'Someday', sub: 'no pressure to act', empty: 'Room for the things that can wait.' },
+    { key: 'someday', name: 'Someday', sub: 'A soft landing for your maybes.', empty: 'Good things can take their sweet time.' },
+  ];
+  const LANES = [
+    { key: 'now', sections: ['now'] },
+    { key: 'next', sections: ['next', 'nextweek'] },
+    { key: 'someday', sections: ['someday'] },
   ];
   const PRIORITIES = ['Not urgent', 'Low', 'Somewhat', 'Urgent'];
   const $ = (id) => document.getElementById(id);
@@ -140,6 +145,11 @@
     const board = $('board');
     board.replaceChildren();
     const count = nowCount();
+    $('date-label').textContent = new Date().toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
     $('subtitle').textContent = current.length ? `${count} in Now · ${current.length} on your board` : 'A little room to think.';
     const doneRecent = notes.filter((n) => n.completedAt != null && n.completedAt >= Date.now() - 30 * 86400000).sort((a, b) => b.completedAt - a.completedAt);
     $('done-count').textContent = doneRecent.length ? `(${doneRecent.length})` : '';
@@ -149,16 +159,18 @@
     $('add-note').hidden = showingDone;
     document.querySelector('.filters').hidden = showingDone;
     $('filter-note').hidden = showingDone || selectedFilter === 'all';
-    document.querySelector('.intro h1').textContent = showingDone ? 'What you cleared' : 'Your board';
-    document.querySelector('.intro p').textContent = showingDone ? 'A quiet record of the last 30 days.' : "One place for everything you're carrying.";
+    document.querySelector('.intro h1').textContent = showingDone ? 'What you cleared' : 'A little less on your mind.';
+    $('intro-copy').textContent = showingDone ? 'A quiet record of the last 30 days.' : "One calm board for everything you're carrying.";
 
-    for (const section of SECTIONS) {
+    for (const laneSpec of LANES) {
+      const section = SECTIONS.find((candidate) => candidate.key === laneSpec.key);
+      const laneCount = laneSpec.sections.reduce((total, key) => total + sorted(key).length, 0);
       const lane = el('section', 'lane');
-      lane.setAttribute('aria-label', section.name);
+      lane.setAttribute('aria-label', laneSpec.sections.length > 1 ? 'Next and next week' : section.name);
       const head = el('div', 'section-heading');
       const words = el('div');
       words.append(el('h2', '', section.name), el('p', '', section.sub));
-      const sectionCount = section.key === 'now' ? `${count} / 7` : String(sorted(section.key).length);
+      const sectionCount = section.key === 'now' ? `${count} / 7` : String(laneCount);
       head.append(words, el('span', `count${section.key === 'now' && count >= 7 ? ' full' : ''}`, sectionCount));
       lane.append(head);
       if (section.key === 'now') {
@@ -167,19 +179,30 @@
         for (let i = 0; i < 7; i++) gauge.append(el('i', i < count ? 'on' : ''));
         lane.append(gauge);
       }
-      const items = sorted(section.key).filter(matches);
-      if (items.length) {
-        const list = el('div', 'note-list');
-        items.forEach((n) => list.append(renderNote(n)));
-        lane.append(list);
-      } else {
-        const empty = el('div', 'empty');
-        empty.append(el('p', '', selectedFilter === 'all' ? section.empty : 'No notes from this time here.'));
-        if (selectedFilter === 'all') {
-          const add = el('button', '', `Add to ${section.name}`);
-          add.type = 'button'; add.addEventListener('click', () => openDialog(null, section.key)); empty.append(add);
+      for (const sectionKey of laneSpec.sections) {
+        const group = SECTIONS.find((candidate) => candidate.key === sectionKey);
+        if (sectionKey === 'nextweek') {
+          const subheading = el('div', 'lane-subheading');
+          subheading.append(
+            el('h3', '', group.name),
+            el('span', 'count', String(sorted(sectionKey).length)),
+          );
+          lane.append(subheading);
         }
-        lane.append(empty);
+        const items = sorted(sectionKey).filter(matches);
+        if (items.length) {
+          const list = el('div', 'note-list');
+          items.forEach((n) => list.append(renderNote(n)));
+          lane.append(list);
+        } else {
+          const empty = el('div', 'empty');
+          empty.append(el('p', '', selectedFilter === 'all' ? group.empty : 'No notes from this time here.'));
+          if (selectedFilter === 'all') {
+            const add = el('button', '', `Add to ${group.name}`);
+            add.type = 'button'; add.addEventListener('click', () => openDialog(null, sectionKey)); empty.append(add);
+          }
+          lane.append(empty);
+        }
       }
       board.append(lane);
     }

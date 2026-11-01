@@ -14,6 +14,7 @@ export function SectionHeading({ section, count }: { section: Section; count: nu
   const t = useTheme();
   const copy = SECTION_COPY[section];
   const full = section === 'now' && count >= NOW_LIMIT;
+  const showCount = section === 'now' || count > 0;
 
   return (
     <View>
@@ -21,9 +22,17 @@ export function SectionHeading({ section, count }: { section: Section; count: nu
         <Text accessibilityRole="header" style={[type.section, { color: t.c.ink }]}>
           {copy.name}
         </Text>
-        <Text style={[type.label, { color: full ? t.c.warn : t.c.inkSoft }]}>
-          {section === 'now' ? `${count} / ${NOW_LIMIT}` : count === 0 ? '' : count}
-        </Text>
+        {showCount && (
+          <Text
+            style={[
+              type.label,
+              s.count,
+              { color: full ? t.c.warn : t.c.accent, backgroundColor: t.c.surface, borderColor: t.c.rule },
+            ]}
+          >
+            {section === 'now' ? `${count} / ${NOW_LIMIT}` : count}
+          </Text>
+        )}
       </View>
       <Text style={[type.caption, { color: t.c.inkFaint }]}>{copy.sub}</Text>
     </View>
@@ -32,4 +41,5 @@ export function SectionHeading({ section, count }: { section: Section; count: nu
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  count: { borderWidth: 1, borderRadius: 999, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 2 },
 });

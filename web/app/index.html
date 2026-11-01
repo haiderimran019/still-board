@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#fdf7ec">
+  <meta name="theme-color" content="#fbf9f6">
   <meta name="description" content="A calm, private board for what you're carrying. Now, Next, Next week, Someday.">
   <link rel="icon" href="../favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Shantell+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./board.css">
   <title>still. — Your board</title>
   <script src="./app.js" defer></script>
 </head>
@@ -38,8 +39,9 @@
 
     <main id="main">
       <div class="intro">
+        <p id="date-label" class="date" aria-label="Today"></p>
         <h1>Your board</h1>
-        <p>One place for everything you're carrying.</p>
+        <p id="intro-copy">One place for everything you're carrying.</p>
       </div>
 
       <button id="add-note" class="composer" type="button"><span>What's on your mind?</span><span class="plus" aria-hidden="true">+</span></button>
